@@ -43,7 +43,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		2
-#define FIFOFAST_VERSION_PATCH		0
+#define FIFOFAST_VERSION_PATCH		1
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -291,7 +291,7 @@ do{																\
 	if(!_fff_is_empty(_id))										\
 		_return = _fff_read_lite(_id);							\
 	else														\
-		_return = 0;											\
+		_return = *((typeof(_id.data[0])*)NULL);				\
 	_return;													\
 })	
 
