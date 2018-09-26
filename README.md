@@ -34,6 +34,9 @@ fifofast is a fifo for C/C++ based on macros with the aim to solve all the probl
 
 ## Features
 
+### MIT License
+The great thing about basic code is that it can be used over and over in all kinds of projects without the need to re-invent the wheel every time. With fifofast I want to give you not only a basic, yet highly efficient building block, but also the freedom to do use it the way you need to without all that legal hassle. If this code has become a part of your projrct, I'd appreciate a mention and a link back to this page so your users can benifit, too. Thanks!
+
 ### Static Memory
 fifofast is 100% based on static memory, which makes it more efficient on embedded systems than dynamic implementations.
 
