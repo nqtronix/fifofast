@@ -33,37 +33,234 @@ _fff_declare(frame_t, fifo_frame, 4);
 
 int main(void)
 {
-	// initialize all fifos
-    _fff_init(fifo_uint8);
-	_fff_init(fifo_int16);
-	_fff_init(fifo_frame);
+	//////////////////////////////////////////////////////////////////////////
+	// Test Environment
+	//////////////////////////////////////////////////////////////////////////
 
-	// 'volatile' allows inspection during debugging
+	// 'volatile' prevents compiler from removing these "unused" variables and thus allows
+	// inspection during debugging. It is recommended to rightclick->watch each variable
+	// Note: The compiler will throw a warning per variable, these can be safely ignored
+
+	// general inspection of data stored in fifo
 	volatile uint8_t dbg0 = 0;
 	volatile uint8_t dbg1 = 0;
 	volatile uint8_t dbg2 = 0;
 	volatile uint8_t dbg3 = 0;
 
-	// add 3 values with the fast '_lite' variant (after init we know it is empty)
+	// for "_fff_read...()" macros only
+	volatile uint8_t dbg_read0 = 0;
+	volatile uint8_t dbg_read1 = 0;
+	volatile uint8_t dbg_read2 = 0;
+	volatile uint8_t dbg_read3 = 0;
+
+	// for "_fff_add...()" macros only
+	volatile uint8_t* dbg_p0 = 0;
+	volatile uint8_t* dbg_p1 = 0;
+	volatile uint8_t* dbg_p2 = 0;
+	volatile uint8_t* dbg_p3 = 0;
+
+	// inspection of macros that return a value
+	volatile uint8_t dbg_mem_depth	= 0;
+	volatile uint8_t dbg_mem_mask	= 0;
+	volatile uint8_t dbg_mem_level	= 0;
+	volatile uint8_t dbg_mem_free	= 0;
+	volatile uint8_t dbg_is_empty	= 0;
+	volatile uint8_t dbg_is_full	= 0;
+	
+	// initialize all fifos
+    _fff_init(fifo_uint8);
+	_fff_init(fifo_int16);
+	_fff_init(fifo_frame);
+
+
+	// Note: only fifo_uint8 is tested here as uint8 are most easy to work with
+	// after each change (or set of changes) call all returning functions
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 0
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 3 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// != 0 (= true, note that the actually value is NOT guranteed to be '1'!)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// Test Cases WRITE
+	//////////////////////////////////////////////////////////////////////////
+
+	// add 2 values with the fast '_lite' variant (after init we know it is empty)
+	// use unusual values (NOT 0, 1, 2 ...) to decrease the likelihood of false positives
 	_fff_write_lite(fifo_uint8, 0x73);
 	_fff_write_lite(fifo_uint8, 0x74);
-	_fff_write_lite(fifo_uint8, 0x75);
-	dbg0 = _fff_peek(fifo_uint8, 0);	// = 0x73
-	dbg1 = _fff_peek(fifo_uint8, 1);	// = 0x74
-	dbg2 = _fff_peek(fifo_uint8, 2);	// = 0x75
-	dbg3 = _fff_peek(fifo_uint8, 3);	// = "empty" = any value
 
-	// add 2 values to demonstrate overflow safety
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x73
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x74
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = "empty" = any value (not initialized)
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = "empty" = any value (not initialized)
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 2
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 1 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	// add 3 values to demonstrate overflow safety
+	_fff_write(fifo_uint8, 0x75);
 	_fff_write(fifo_uint8, 0x76);
 	_fff_write(fifo_uint8, 0x77);
-	dbg0 = _fff_peek(fifo_uint8, 0);	// = 0x73
-	dbg1 = _fff_peek(fifo_uint8, 1);	// = 0x74
-	dbg2 = _fff_peek(fifo_uint8, 2);	// = 0x75
-	dbg3 = _fff_peek(fifo_uint8, 3);	// = 0x76
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x73
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x74
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = 0x75
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = 0x76
 
-	
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 3 (see macro description)
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 0 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// != 0 (= true, note that the actually value is NOT guaranteed to be '1'!)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// Test Case PEEK
+	//////////////////////////////////////////////////////////////////////////
+
+	// modify existing value (index 0 and 2) with _fff_peek()
+	_fff_peek(fifo_uint8, 0) = 0x53;	
+	_fff_peek(fifo_uint8, 2) = 0x55;
+
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x53
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x74
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = 0x55
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = 0x76
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 3 (see macro description)
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 0 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// != 0 (= true, note that the actually value is NOT guaranteed to be '1'!)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// Test Cases READ
+	//////////////////////////////////////////////////////////////////////////
+
+	// TODO: level decremented wrongly if fifo is full
+	// read 2 values with the fast '_lite' variant (we know we have written at least to entries)
+	dbg_read0 = _fff_read_lite(fifo_uint8);				// = 0x53
+	dbg_read1 = _fff_read_lite(fifo_uint8);				// = 0x74
+
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x55
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x76
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = "empty" = any value (empty elements are NOT reset back to '0'!)
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = "empty" = any value
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 2
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 1 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	// read 3 values t demonstrate overflow safety
+	dbg_read0 = _fff_read(fifo_uint8);					// = 0x55
+	dbg_read1 = _fff_read(fifo_uint8);					// = 0x76
+	dbg_read2 = _fff_read(fifo_uint8);					// = 0x00 (returns always 0 if empty)
+
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = "empty" = any value (empty elements are NOT reset back to '0'!)
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = "empty" = any value
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = "empty" = any value
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = "empty" = any value
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 0
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 3 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// != 0 (= true)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// Test Cases ADD
+	//////////////////////////////////////////////////////////////////////////
+
+	// add 2 values with the fast '_lite' variant (after init we know it is empty)
+	// use unusual values (NOT 0, 1, 2 ...) to decrease the likelihood of false positives
+	dbg_p0 = _fff_add_lite(fifo_uint8);
+	dbg_p1 = _fff_add_lite(fifo_uint8);
+
+	if(dbg_p0 != 0) *dbg_p0 = 0x3a;
+	if(dbg_p1 != 0) *dbg_p1 = 0x3b;
+
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x3a
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x3b
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = "empty" = any value (not initialized)
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = "empty" = any value (not initialized)
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 2
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 1 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	// add 3 values to demonstrate overflow safety
+	dbg_p0 = _fff_add(fifo_uint8);
+	dbg_p1 = _fff_add(fifo_uint8);
+	dbg_p2 = _fff_add(fifo_uint8);
+
+	if(dbg_p0 != 0) *dbg_p0 = 0x3c;
+	if(dbg_p1 != 0) *dbg_p1 = 0x3d;
+	if(dbg_p2 != 0) *dbg_p2 = 0x3e;
+
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x3a
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x3b
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = 0x3c
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = 0x3d
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 3 (see macro description)
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 0 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// != 0 (= true, note that the actually value is NOT guaranteed to be '1'!)
+	asm volatile ("nop");								// easy breakpoint
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// Test Case RESET
+	//////////////////////////////////////////////////////////////////////////
+
+	// only header is reset to its initial values which marks all present data as "empty" (but data
+	// is not reset to 0)
+	_fff_reset(fifo_uint8);									
+
+	dbg0 = _fff_peek(fifo_uint8, 0);					// = 0x3a
+	dbg1 = _fff_peek(fifo_uint8, 1);					// = 0x3b
+	dbg2 = _fff_peek(fifo_uint8, 2);					// = 0x3c
+	dbg3 = _fff_peek(fifo_uint8, 3);					// = 0x3d
+
+	dbg_mem_depth	= _fff_mem_depth(fifo_uint8);		// = 4 (constant)
+	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
+	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 3 (see macro description)
+	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 0 (see macro description)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// = 0 (= false)
+	dbg_is_full		= _fff_is_full(fifo_uint8);			// != 0 (= true, note that the actually value is NOT guaranteed to be '1'!)
+	asm volatile ("nop");								// easy breakpoint
+
 
 	// End simulation
-    while (1);
+    while (1) asm volatile ("nop");
 }
 

@@ -42,10 +42,10 @@
 
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
-#define FIFOFAST_VERSION_MINOR		1
+#define FIFOFAST_VERSION_MINOR		2
 #define FIFOFAST_VERSION_PATCH		0
 #define FIFOFAST_VERSION_SUFFIX		
-#define FIFOFAST_VERSION_META		wip
+#define FIFOFAST_VERSION_META		
 
 //////////////////////////////////////////////////////////////////////////
 // Check requirements
@@ -70,7 +70,7 @@ typedef struct
 	const uint8_t mask;			// (max amount of elements in data array) - 1
 	uint8_t read;				// index from which to read next element
 	uint8_t write;				// index to which to write next element
-	uint8_t min_w;				// possible writes without further checking
+	uint8_t level;				// possible writes without further checking
 	uint8_t data[];				// data storage array
 } fff8_t;
 
@@ -80,7 +80,7 @@ typedef struct
 	const uint16_t mask;		// (max amount of elements in data array) - 1
 	uint16_t read;				// index from which to read next element
 	uint16_t write;				// index to which to write next element
-	uint16_t min_w;				// possible writes without further checking
+	uint16_t level;				// possible writes without further checking
 	uint8_t data[];				// data storage array
 } fff16_t;
 
@@ -90,7 +90,7 @@ typedef struct
 	const uint32_t mask;		// (max amount of elements in data array) - 1
 	uint32_t read;				// index from which to read next element
 	uint32_t write;				// index to which to write next element
-	uint32_t min_w;				// possible writes without further checking
+	uint32_t level;				// possible writes without further checking
 	uint8_t data[];				// data storage array
 } fff32_t;
 
@@ -144,7 +144,7 @@ typedef struct
 struct _fff__name_struct(_id) {											\
 	_fff__get_type(_depth) read;										\
 	_fff__get_type(_depth) write;										\
-	_fff__get_type(_depth) min_w;										\
+	_fff__get_type(_depth) level;										\
 	_type data[_fff__get_arraydepth16(_depth)];							\
 } _id
 
@@ -154,7 +154,7 @@ struct _fff__name_structp8(_id) {										\
 	const uint8_t mask;													\
 	uint8_t read;														\
 	uint8_t write;														\
-	uint8_t min_w;														\
+	uint8_t level;														\
 	_type data[_fff__get_arraydepth8(_depth)];							\
 } _id
 
@@ -164,7 +164,7 @@ struct _fff__name_struct(_id) _id =										\
 {																		\
 	0,																	\
 	0,																	\
-	(_fff__sizeof_array(_id)-1),										\
+	0,																	\
 	{}																	\
 }
 
@@ -176,7 +176,7 @@ struct _fff__name_structp8(_id) _id =									\
 	(_fff__sizeof_array(_id)-1),										\
 	0,																	\
 	0,																	\
-	(_fff__sizeof_array(_id)-1),										\
+	0,																	\
 	{}																	\
 }
 
@@ -185,7 +185,7 @@ struct _fff__name_structp8(_id) _id =									\
 // This macro is used to simplify other marcos below; the end user will likely never need it
 // _id:		C conform identifier
 // idx:		the index value to mask. MUST be larger than -_sizeof_array(_id.data)
-#define _fff_wrap(_id, idx)				((idx) & (_sizeof_array(_id.data)-1))
+#define _fff_wrap(_id, idx)				((idx) & _fff_mem_mask(_id))
 
 // returns the maximum amount of data elements which can be stored in the fifo
 // The returned value is calculated at compile time and thus a constant. No atomic access is needed.
@@ -200,29 +200,29 @@ struct _fff__name_structp8(_id) _id =									\
 #define _fff_data_size(_id)				(sizeof(_id.data[0]))
 
 // returns !0 if empty
-#define _fff_is_empty(_id)				((_id.min_w == _fff_mem_mask(_id)) && (_id.min_w != 0))
+#define _fff_is_empty(_id)				(_id.level == 0)
 
 // returns !0 if full
-#define _fff_is_full(_id)				((_id.min_w == 0) && (_id.write == _id.read))
+#define _fff_is_full(_id)				((_id.write == _id.read) && (_id.level == _fff_mem_mask(_id)))
 
 // returns the current fill level of the fifo (the amount of elements that can be read)
-// Note that this macro is meant to check if access through _fff_data(...) is possible. If the fifo
+// Note that this macro is meant to check if access through _fff_peek(...) is possible. If the fifo
 // is completely full (which should never happen normally), it will sill return (depth-1) instead!
 // Use _fff_is_full(...) to determine whether the fifo is full.
 // _id: C conform identifier
-#define _fff_mem_used(_id)				(_fff_mem_mask(_id) - _id.min_w)
+#define _fff_mem_level(_id)				(_id.level)
 
 // returns the current free space of the fifo (the amount of elements that can be written)
 // Note that this macro is meant to check if repeated writes are possible. If the fifo
 // is almost full (depth-1, should only rarely happen normally), it will return 0.
 // Use !_fff_is_full(...) to determine whether can accept further elements.
 // _id: C conform identifier
-#define _fff_mem_free(_id)				(_id.min_w)
+#define _fff_mem_free(_id)				(_fff_mem_mask(_id) - _id.level)
 
 
 // clears/ resets buffer completely
 // _id:		C conform identifier
-#define _fff_reset(_id)					do{_id.read=0; _id.write=0; _id.min_w=_fff_mem_mask(_id);} while (0)
+#define _fff_reset(_id)					do{_id.read=0; _id.write=0; _id.level=0;} while (0)
 
 
 // TODO: remove is broken, reason unknown; details:
@@ -232,23 +232,22 @@ struct _fff__name_structp8(_id) _id =									\
 // This function is especially useful after data has been used by _fff_peek(...)
 // _id:		C conform identifier
 // amount:	Amount of elements which will be removed; must be amount > 0;
-#define _fff_remove_broken(_id, amount)								\
-do{																\
-	uint8_t _amount = (amount);									\
-	if(_fff_is_full(_id))										\
-	{															\
-		_id.min_w++;											\
-		_amount--;												\
-	}															\
-	if(_fff_mem_mask(_id)-_id.min_w > (_amount))	/*flush if equal*/		\
-	{															\
-		_id.min_w	+= _amount;									\
-		_id.read	= _fff_wrap(_id, (_id.read+(_amount+1)));	\
-	}															\
-	else														\
-		_fff_reset(_id);										\
-}while(0)			
-
+// #define _fff_remove_broken(_id, amount)								\
+// do{																\
+// 	uint8_t _amount = (amount);									\
+// 	if(_fff_is_full(_id))										\
+// 	{															\
+// 		_id.min_w++;											\
+// 		_amount--;												\
+// 	}															\
+// 	if(_fff_mem_mask(_id)-_id.min_w > (_amount))	/*flush if equal*/		\
+// 	{															\
+// 		_id.min_w	+= _amount;									\
+// 		_id.read	= _fff_wrap(_id, (_id.read+(_amount+1)));	\
+// 	}															\
+// 	else														\
+// 		_fff_reset(_id);										\
+// }while(0)
 
 
 #define _fff_remove(_id, amount)								\
@@ -258,31 +257,44 @@ do{																\
 }while(0)
 					
 
-#define _fff_remove_newest(_id, amount)							\
-do{																\
-	for (uint8_t _idx = amount; _idx > 0; _idx--)				\
-	{															\
-		if(!_fff_is_empty(_id))									\
-			_id.min_w++;										\
-		_id.write = _fff_wrap(_id, (_id.write-1));				\
-	}															\
-}while(0)					
-
+// #define _fff_remove_newest(_id, amount)							\
+// do{																\
+// 	for (uint8_t _idx = amount; _idx > 0; _idx--)				\
+// 	{															\
+// 		if(!_fff_is_empty(_id))									\
+// 			_id.min_w++;										\
+// 		_id.write = _fff_wrap(_id, (_id.write-1));				\
+// 	}															\
+// }while(0)					
 
 
 // returns the next element from the fifo and removes it from the memory
 // Use if(!_fff_is_empty(_id)) if amount of stored data is unknown
 // _id: C conform identifier
-#define _fff_read(_id)											\
+#define _fff_read_lite(_id)										\
 ({																\
 	typeof(_id.data[0])	_return;								\
-	if(!_fff_is_empty(_id))										\
-		_id.min_w++;											\
+	if(!_fff_is_full(_id))							\
+		_id.level--;											\
 																\
 	_return = _id.data[_id.read];								\
 	_id.read = _fff_wrap(_id, (_id.read+1));					\
 	_return;													\
 })
+
+// returns the next element from the fifo and removes it from the memory
+// if no element is available, 0 is returned
+// _id: C conform identifier
+#define _fff_read(_id)											\
+({																\
+	typeof(_id.data[0])	_return;								\
+	if(!_fff_is_empty(_id))										\
+		_return = _fff_read_lite(_id);							\
+	else														\
+		_return = 0;											\
+	_return;													\
+})	
+
 				 
 // adds an element to the fifo
 // Use if(!_fff_is_full(_id)) if amount of stored data is unknown
@@ -292,8 +304,8 @@ do{																\
 do{																\
 	_id.data[_id.write] = (newdata);							\
 	_id.write = _fff_wrap(_id, (_id.write+1));					\
-	if(--_id.min_w == 255)										\
-		_id.min_w = 0;											\
+	if(_id.level != _fff_mem_mask(_id))							\
+		_id.level++;											\
 }while(0)
 
 // adds an element to the fifo, if space is available
@@ -301,7 +313,10 @@ do{																\
 // _id:		C conform identifier
 // newdata:	data to be written
 #define _fff_write(_id, newdata)								\
-	do{if(!_fff_is_full(_id)){_fff_write_lite(_id, newdata);}}while(0)
+do{																\
+	if(!_fff_is_full(_id))										\
+		_fff_write_lite(_id, newdata);							\
+}while(0)
 
 // #define _fff_write_bulk(_id, cnt, pointer)
 // do{
@@ -309,7 +324,6 @@ do{																\
 // 
 // }while(0);
 
-// untested
 // adds an element to the fifo, but does not write any data to it. instead, a pointer to the data
 // section is returned. The caller may write up to _fff_data_size(_id) bytes to this location.
 // Use if(!_fff_is_full(_id)) if amount of stored data is unknown
@@ -318,13 +332,12 @@ do{																\
 ({																\
 	typeof(&_id.data[0]) _return = & _id.data[_id.write];		\
 	_id.write = _fff_wrap(_id, (_id.write+1));					\
-	if(--_id.min_w == 255)										\
-		_id.min_w = 0;											\
+	if(_id.level != _fff_mem_mask(_id))							\
+		_id.level++;											\
 	_return;													\
 })
 
-// untested
-// like _fff_add(_id), but checks if space is available before writing. Returns 'null' if full.
+// like _fff_add_lite(_id), but checks if space is available before writing. Returns 'null' if full.
 // _id: C conform identifier
 #define _fff_add(_id)											\
 ({																\
@@ -351,90 +364,90 @@ do{																\
 
 
 // functions to allow use of pinter
-inline uint8_t fff_wrap(fff8_t *fifo, uint8_t idx)
-{
-	return (idx & fifo->mask);
-}
-inline uint8_t fff_data_size(fff8_t *fifo)
-{
-	return fifo->data_size;
-}
-
-inline uint8_t fff_is_empty(fff8_t *fifo)
-{
-	return ((fifo->mask == fifo->min_w) && (fifo->min_w != 0));
-}
-inline uint8_t fff_is_full(fff8_t *fifo)
-{
-	return ((fifo->min_w == 0) && (fifo->write == fifo->read));
-}
-inline uint8_t fff_mem_used(fff8_t *fifo)
-{
-	return (fifo->mask - fifo->min_w);
-}
-inline uint8_t fff_mem_free(fff8_t *fifo)
-{
-	return (fifo->min_w);
-}
-
-inline void fff_flush(fff8_t *fifo)
-{
-	fifo->read	= 0;
-	fifo->write	= 0;
-	fifo->min_w	= fifo->mask;
-}
-
-inline void fff_remove(fff8_t *fifo, uint8_t amount)
-{
-	if(fff_is_full(fifo))
-	{
-		fifo->min_w--;
-		amount--;
-	}
-	if(fifo->mask - fifo->min_w > amount)	// flush if equal
-	{
-		fifo->min_w	+= amount;
-		fifo->read	= fff_wrap(fifo, (fifo->read + amount));
-	}
-	else
-		fff_flush(fifo);
-}
-
-inline void* fff_peek_read(fff8_t *fifo, uint8_t idx)
-{
-	return &(fifo->data[fff_wrap(fifo, fifo->read + idx) * fifo->data_size]);
-}
-
-// like fff_peek_read, but overwrites the stored elements
-inline void fff_peek_write(fff8_t *fifo, uint8_t idx, void *data)
-{
-	// copy an element byte for byte into the fifo
-	for (uint8_t i = fifo->data_size; i>0; i--)
-	{
-		fifo->data[fifo->read*fifo->data_size + i-1] = ((uint8_t*)data)[i-1];
-	}
-}
-
-// not tested yet
-inline void fff_write(fff8_t *fifo, void *data)
-{
-	for (uint8_t i = fifo->data_size; i>0; i--)
-	{
-		fifo->data[fifo->write*fifo->data_size + i-1] = ((uint8_t*)data)[i-1];
-	}
-	fifo->write = fff_wrap(fifo, fifo->write+1);
-	if(--fifo->min_w == 255)
-		fifo->min_w = 0;
-}
-
-
-inline void fff_write_safe(fff8_t *fifo, void *data)
-{
-	if (fff_is_full(fifo))
-		return;
-
-	fff_write(fifo, data);
-}
+// inline uint8_t fff_wrap(fff8_t *fifo, uint8_t idx)
+// {
+// 	return (idx & fifo->mask);
+// }
+// inline uint8_t fff_data_size(fff8_t *fifo)
+// {
+// 	return fifo->data_size;
+// }
+// 
+// inline uint8_t fff_is_empty(fff8_t *fifo)
+// {
+// 	return ((fifo->mask == fifo->min_w) && (fifo->min_w != 0));
+// }
+// inline uint8_t fff_is_full(fff8_t *fifo)
+// {
+// 	return ((fifo->min_w == 0) && (fifo->write == fifo->read));
+// }
+// inline uint8_t fff_mem_used(fff8_t *fifo)
+// {
+// 	return (fifo->mask - fifo->min_w);
+// }
+// inline uint8_t fff_mem_free(fff8_t *fifo)
+// {
+// 	return (fifo->min_w);
+// }
+// 
+// inline void fff_flush(fff8_t *fifo)
+// {
+// 	fifo->read	= 0;
+// 	fifo->write	= 0;
+// 	fifo->min_w	= fifo->mask;
+// }
+// 
+// inline void fff_remove(fff8_t *fifo, uint8_t amount)
+// {
+// 	if(fff_is_full(fifo))
+// 	{
+// 		fifo->min_w--;
+// 		amount--;
+// 	}
+// 	if(fifo->mask - fifo->min_w > amount)	// flush if equal
+// 	{
+// 		fifo->min_w	+= amount;
+// 		fifo->read	= fff_wrap(fifo, (fifo->read + amount));
+// 	}
+// 	else
+// 		fff_flush(fifo);
+// }
+// 
+// inline void* fff_peek_read(fff8_t *fifo, uint8_t idx)
+// {
+// 	return &(fifo->data[fff_wrap(fifo, fifo->read + idx) * fifo->data_size]);
+// }
+// 
+// // like fff_peek_read, but overwrites the stored elements
+// inline void fff_peek_write(fff8_t *fifo, uint8_t idx, void *data)
+// {
+// 	// copy an element byte for byte into the fifo
+// 	for (uint8_t i = fifo->data_size; i>0; i--)
+// 	{
+// 		fifo->data[fifo->read*fifo->data_size + i-1] = ((uint8_t*)data)[i-1];
+// 	}
+// }
+// 
+// // not tested yet
+// inline void fff_write(fff8_t *fifo, void *data)
+// {
+// 	for (uint8_t i = fifo->data_size; i>0; i--)
+// 	{
+// 		fifo->data[fifo->write*fifo->data_size + i-1] = ((uint8_t*)data)[i-1];
+// 	}
+// 	fifo->write = fff_wrap(fifo, fifo->write+1);
+// 	if(--fifo->min_w == 255)
+// 		fifo->min_w = 0;
+// }
+// 
+// 
+// inline void fff_write_safe(fff8_t *fifo, void *data)
+// {
+// 	if (fff_is_full(fifo))
+// 		return;
+// 
+// 	fff_write(fifo, data);
+// }
 
 
 #endif /* FIFOFAST_H_ */
