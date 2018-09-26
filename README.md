@@ -4,7 +4,7 @@
 ## Introduction
 On microcontrollers (MCUs) the application program often has to collect and process data from multiple sources such as sensors, ADCs or external communication interfaces. Since truly parallel handling of all tasks is not possible, it is reasonable to buffer incoming data until the previous task is completed.
 
-A simple fifo is best suited for this purpose. Likely you have written your own implementation at least once during your studies. However it turns out that although the common textbook approach is great for PCs, it is unnecessary bloated for MCUs. It still might be ok for your applications, but if you try to handle >1kB/s on an AVR controller (or similar), you might run into performance issues.
+A simple fifo is best suited for this purpose. Likely you have written your own implementation at least once during your studies. It turns out that although the common textbook approach is great for PCs, it is unnecessary bloated for MCUs. It still might be ok for your applications, but if you try to handle >1kB/s on an AVR controller (or similar), you might notice a performance hit.
 
 
 ## Problems of the textbook approach
@@ -22,12 +22,12 @@ A regular function call on an AVR8 MCU takes about 10 to 20 additional cycles, d
 On AVR8 MCUs a if statement take up to 4 cycles to process, on MCUs with a pipeline the effects are even worse. Therefore it is reasonable to limit the use to as little as possible.
 
 ### Fixed data type
-The few fifo implementations which use static memory allocation are limited to one data type only. If you have to support another data type the "solution" is to copy & paste all code and change the data type as well as a few name.
+The few fifo implementations which use static memory allocation are limited to one data type only. If you have to support another data type the "solution" is to copy & paste all code and change the data type as well as a few names.
 
 
 ## Summary
 
-fifofast is a fifo for C/C++ based on macros with the aim to solve all the problems mentioned above. The basic idea is to create 2^n ring buffers as introduced on the german [mikroconterller.net wiki](https://www.mikrocontroller.net/articles/FIFO#2n-Ringpuffer_-_die_schnellste_L.C3.B6sung) to reduce the amount of if-statements required. The macros create all required C code, which is then further optimised by the compiler. The resulting assembler code has minimum overhead and is very fast¹ on almost every target architecture.
+fifofast is a fifo for C/C++ based on macros with the aim to solve all the problems mentioned above. The basic idea is to create 2ⁿ ring buffers as introduced on the german [mikroconterller.net wiki](https://www.mikrocontroller.net/articles/FIFO#2n-Ringpuffer_-_die_schnellste_L.C3.B6sung) to reduce the amount of if-statements required. The macros create all required C code, which is then further optimised by the compiler. The resulting assembler code has minimum overhead and is very fast¹ on almost every target architecture.
 
 ¹ no scientific performance comparisons have been done, yet
 
@@ -35,10 +35,10 @@ fifofast is a fifo for C/C++ based on macros with the aim to solve all the probl
 ## Features
 
 ### Static Memory
-fifofast is 100% based on static memory, which makes it more efficient on embedded systems than alternative implementations.
+fifofast is 100% based on static memory, which makes it more efficient on embedded systems than dynamic implementations.
 
 ### Uses function-like macros
-Function-like macros behave a lot like inline functions, the code is pasted wherever the function-like macro is called. This significantly increases the execution speed if called from ISRs. In addition macros allow more flexibility and improved compiler optimisation.
+Function-like macros behave a lot like inline functions: the code is pasted wherever the function-like macro is called. This significantly increases the execution speed if called from ISRs. In addition macros allow more flexibility and improved compiler optimisation.
 
 ### Supports Generic Data
 fifofast supports all types with any size including custom structures as long as they are typedef-d. Each fifo can store 2^n elements depending on your requirements.
@@ -62,7 +62,7 @@ In AtmelStudio each fifo can be inspected in the debugger, just like any other s
 ## Requirements, Limits, Downsides
 
 ### Fifo size
-The fifo size is limited to 2^n elements to make use of the fast wrapping functionality. Other sizes will be automatically rounded up. Pointable fifos are limited to 256 elements with a size of up to 256 bytes each.
+The fifo size is limited to 2ⁿ elements to make use of the fast wrapping functionality. Other sizes will be automatically rounded up. Pointable fifos are limited to 256 elements with a size of up to 256 bytes each.
 
 ### ISR-safe access
 If a fifo is accessed from an ISR, it is recommended to make all accesses form regular code atomic. Otherwise glitches may occur with some function combinations (further investigation required).
@@ -71,17 +71,17 @@ If a fifo is accessed from an ISR, it is recommended to make all accesses form r
 Each function-like macro pastes new code at its location. Compared to a function-based fifo the program memory usage (flash) is higher.
 
 ### GNU C/ GCC compiler
-Some macros require compiler extensions, namely _compound statetments_ and _typeof_. You may be able to get away without them if you are willing to give up on some flexibility.
+Some macros require compiler extensions, namely _compound statetments_ and _typeof_. You may be able to get away without them if you are willing to give up on some flexibility (and change the code yourself).
 
 ### Compiler optimisation
 The macros contain a lot of literals and arithmetics with them. All of this extra code will be optimised away automatically unless optimisation is disabled. In that case the resulting assembler code will be incredible slow, so do not use the `-o` setting!
 
 
 ## Documentation
-Since this is an early development version the documentation is currently only included as comments in the source file(s). You may use the fifofast_demo.c as a crude example code and/or to test each macro with the simulator and debugger.
+Since this is an early development version the documentation is currently only included as comments in the source file(s). You may use the fifofast_demo.c as example code and/or to test each macro with the simulator and debugger.
 
 
 ## Author's Note (The current state of this code)
-The first version of this fifo was created about a year ago. Since then I've used the macros for multiple projects and different MCU architectures (AVR8, SAMG and SAML) and it seems to be working fine. That said, the most recent version has NOT been completely and throughly tested (yet), so be aware of that.
+The first version of this fifo was created about a year ago. Since then I've used the macros for multiple projects and different MCU architectures (AVR8, SAMG and SAML) and it seems to be working fine. As of 0.2.0 all macros used in the file fifofast_demo.c work as expected and can be safely used in your programms. The more complex macros `_fff_read...()`, `_fff_write...()` and `_fff_add...()` can possibly further optimized, but their use will likely remain the same. For now, inline functions and pointable fifos have been removed (but will be added again in the future).
 
 Despite being "uncomplete" I decided to publish the code I've written so far, so you can start to use it right now. Besides bugfixes and optimisations I plan on adding a few additional features, although only when I need them for other projects.
