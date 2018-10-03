@@ -43,7 +43,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		2
-#define FIFOFAST_VERSION_PATCH		1
+#define FIFOFAST_VERSION_PATCH		2
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -120,26 +120,23 @@ typedef struct
 
 // all function-like macros are suitable for ANY fifo, independent of data type or size. 
 
-// declares or initializes (defines) semi-anonymous fastfifo structure
+// declares semi-anonymous fifofast structure
 // semi-anonymous means it appears anonymous for the user as it is derived from the '_id' whenever
 // needed, but is not anonymous on compiler level. This has the additional benefit of VAssisX and
-// debugging (inspecting variables during runtime with an external debugger) working as usual.
+// debugging (inspecting variables during runtime with an external debugger) working as usual. The
+// fifo shall only be access through macros or functions provided in this file.
 //
-// The variant _fff_create_p(...) creates a structure, which can be used by the included
-// inline function, as the size of each element and the maximum amount are stored as well. They
-// still can be accessed with all function-like macros provided for some speed gain. 
+// The variant _fff_declare_p(...) declares a structure which includes the size of each element and
+// the maximum amount of elements and can thus be used by the inline functions. They still can be
+// accessed with all function-like macros provided for some speed gain. 
 //
-// _prefix: if required C conform keywords such as volatile can be inserted here. If not required,
-//			leave empty.
 // _id:		C conform identifier
 // _type:	any C type except pointers and structs. To store pointers or structs use typedef first
 // _depth:	maximum amount of elements, which can be stored in the fifo. Only values of 2^n are
 //			possible. If another value is passed the next larger value will be automatically
 //			selected.
-//			Additional 2/4/8 bytes are used for fifos with with <= 2^8/ <= 2^16 / <= 2^31 elements.
+//			Additional 3/6/10 bytes are used for fifos with with <= 2^8/ <= 2^16 / <= 2^31 elements.
 
-
-// creates a structure for the given parameters with the name 'fff_<_id>_s'
 #define _fff_declare(_type, _id, _depth)								\
 struct _fff__name_struct(_id) {											\
 	_fff__get_type(_depth) read;										\
@@ -158,7 +155,11 @@ struct _fff__name_structp8(_id) {										\
 	_type data[_fff__get_arraydepth8(_depth)];							\
 } _id
 
+
 // initializes the fifo with the name '<_id>'
+// This initialization function is technically identical to the term "definition" in c, but to
+// prevent confusion with "#define" it has been named '_fff_init()'. Since it is a definition it
+// can be only called once. Use '_fff_reset()' to reset any fifo back to it's original state.
 #define _fff_init(_id)													\
 struct _fff__name_struct(_id) _id =										\
 {																		\
@@ -168,7 +169,6 @@ struct _fff__name_struct(_id) _id =										\
 	{}																	\
 }
 
-// initializes the point-able fifo with the name '<_id>'
 #define _fff_init_p8(_id)												\
 struct _fff__name_structp8(_id) _id =									\
 {																		\
@@ -231,7 +231,7 @@ struct _fff__name_structp8(_id) _id =									\
 // removes a certain number of elements or less, if not enough elements are available.
 // This function is especially useful after data has been used by _fff_peek(...)
 // _id:		C conform identifier
-// amount:	Amount of elements which will be removed; must be amount > 0;
+// amount:	Amount of elements which will be removed; must be 0 <= amount <= _fff_depth(_id);
 // #define _fff_remove_broken(_id, amount)								\
 // do{																\
 // 	uint8_t _amount = (amount);									\
@@ -257,6 +257,29 @@ do{																\
 }while(0)
 					
 
+#define _fff_remove_fast(_id, amount)							\
+do{																\
+	if(!_fff_is_full)											\
+	{															\
+		if (_id.amount >= _id.level)							\
+		{														\
+			_id.level = 0;										\
+			_id.read = _id.write;								\
+		}														\
+		else													\
+		{														\
+			_id.level -= amount;								\
+			_id.read = _fff_wrap(_id, _id.read+amount)			\
+		}														\
+	}															\
+	else														\
+	{															\
+		_id.level -= (amount-1)									\
+		_id.read = _fff_wrap(_id, _id.read+amount)				\
+	}															\
+}while(0)
+
+
 // #define _fff_remove_newest(_id, amount)							\
 // do{																\
 // 	for (uint8_t _idx = amount; _idx > 0; _idx--)				\
@@ -274,7 +297,7 @@ do{																\
 #define _fff_read_lite(_id)										\
 ({																\
 	typeof(_id.data[0])	_return;								\
-	if(!_fff_is_full(_id))							\
+	if(!_fff_is_full(_id))										\
 		_id.level--;											\
 																\
 	_return = _id.data[_id.read];								\
@@ -345,7 +368,7 @@ do{																\
 	if(!_fff_is_full(_id))										\
 		_return = _fff_add_lite(_id);							\
 	else														\
-		_return = NULL;											\
+		_return = (typeof(&_id.data[0]))NULL;											\
 	_return;													\
 })
 
