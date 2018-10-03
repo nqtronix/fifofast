@@ -42,10 +42,12 @@
 
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
-#define FIFOFAST_VERSION_MINOR		2
-#define FIFOFAST_VERSION_PATCH		2
+#define FIFOFAST_VERSION_MINOR		3
+#define FIFOFAST_VERSION_PATCH		0
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
+
+// For all development versions (0.x.x) the minor version is increased whenever a function was renamed
 
 //////////////////////////////////////////////////////////////////////////
 // Check requirements
@@ -224,59 +226,37 @@ struct _fff__name_structp8(_id) _id =									\
 // _id:		C conform identifier
 #define _fff_reset(_id)					do{_id.read=0; _id.write=0; _id.level=0;} while (0)
 
-
-// TODO: remove is broken, reason unknown; details:
-// _fff_remove(_id, amount) should have the same effect as while(amount){_fff_read(_id);amount--}
-
+	
 // removes a certain number of elements or less, if not enough elements are available.
 // This function is especially useful after data has been used by _fff_peek(...)
+// NOTE: This macro can only delete up to _fff_depth(_id)-1 elements! Workaround: Call twice or use
+// _fff_reset(_id) instead.
 // _id:		C conform identifier
-// amount:	Amount of elements which will be removed; must be 0 <= amount <= _fff_depth(_id);
-// #define _fff_remove_broken(_id, amount)								\
-// do{																\
-// 	uint8_t _amount = (amount);									\
-// 	if(_fff_is_full(_id))										\
-// 	{															\
-// 		_id.min_w++;											\
-// 		_amount--;												\
-// 	}															\
-// 	if(_fff_mem_mask(_id)-_id.min_w > (_amount))	/*flush if equal*/		\
-// 	{															\
-// 		_id.min_w	+= _amount;									\
-// 		_id.read	= _fff_wrap(_id, (_id.read+(_amount+1)));	\
-// 	}															\
-// 	else														\
-// 		_fff_reset(_id);										\
-// }while(0)
-
-
+// amount:	Amount of elements which will be removed
 #define _fff_remove(_id, amount)								\
 do{																\
-	for (uint8_t _idx = amount; _idx > 0; _idx--)				\
-		{_fff_read(_id);}										\
+	if(amount > 0)												\
+	{															\
+		typeof(_id.level) _amount = (typeof(_id.level))amount;	\
+		if(amount > _id.level)									\
+			_amount = _id.level;								\
+		_fff_remove_lite(_id, _amount);							\
+	}															\
 }while(0)
 					
-
-#define _fff_remove_fast(_id, amount)							\
+// removes a certain number of elements. The user must ensure that the given amount of elements can
+// be removed; 0 and _fff_depth(_id) are invallid amounts! If you require argument checking use 
+// _fff_remove().
+// This function is especially useful after data has been used by _fff_peek(...)
+// _id:		C conform identifier
+// amount:	Amount of elements which will be removed; must be 1 <= amount <= _fff_mem_level(_id);
+#define _fff_remove_lite(_id, amount)							\
 do{																\
-	if(!_fff_is_full)											\
-	{															\
-		if (_id.amount >= _id.level)							\
-		{														\
-			_id.level = 0;										\
-			_id.read = _id.write;								\
-		}														\
-		else													\
-		{														\
-			_id.level -= amount;								\
-			_id.read = _fff_wrap(_id, _id.read+amount)			\
-		}														\
-	}															\
+	if(!_fff_is_full(_id))										\
+		_id.level -= amount;									\
 	else														\
-	{															\
-		_id.level -= (amount-1)									\
-		_id.read = _fff_wrap(_id, _id.read+amount)				\
-	}															\
+		_id.level -= (amount-1);								\
+	_id.read = _fff_wrap(_id, _id.read+amount);					\
 }while(0)
 
 
@@ -341,11 +321,6 @@ do{																\
 		_fff_write_lite(_id, newdata);							\
 }while(0)
 
-// #define _fff_write_bulk(_id, cnt, pointer)
-// do{
-// 
-// 
-// }while(0);
 
 // adds an element to the fifo, but does not write any data to it. instead, a pointer to the data
 // section is returned. The caller may write up to _fff_data_size(_id) bytes to this location.
