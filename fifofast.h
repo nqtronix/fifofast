@@ -27,14 +27,20 @@
 
 #include <stdint.h>
 
-// include reduced list of macros if full list is not provided
-#ifndef MACROS_H_
-	#include "helper/macros.h"
-#endif
-#ifndef MACROS_MATH_H_
-	#include "helper/macros_math.h"
-#endif
-
+// include required macros
+// by default, the project's macros will be used, they have to be located at:
+// "utility/macros/..."
+//
+// If your project has no global macros, you can re-direct the compiler to the included files:
+// a) in Atmel Studio edit project properties (ALT+F7 OR "Project -> <project name> Properties...")
+// b) Go to "Toolchain / AVR/GNU C Compiler / Directories"
+// c) add the relative path to: "../src/subrepo/fifofast/" or wherever this code is located. DONE!
+//
+// YOU DO NOT need to change the include(s) below.
+#include "utility/macros/mpl/macro_cat.h"
+#include "utility/macros/com/macro_array.h"
+#include "utility/macros/com/macro_math.h"
+#include "utility/macros/com/macro_type.h"
 
 //////////////////////////////////////////////////////////////////////////
 // General Info
@@ -43,11 +49,11 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		0
+#define FIFOFAST_VERSION_PATCH		1
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
-// For all development versions (0.x.x) the minor version is increased whenever a function was renamed
+// For all development versions (0.x.x) the patch version is increased whenever a function was renamed
 
 //////////////////////////////////////////////////////////////////////////
 // Check requirements
@@ -257,18 +263,7 @@ do{																\
 	else														\
 		_id.level -= (amount-1);								\
 	_id.read = _fff_wrap(_id, _id.read+amount);					\
-}while(0)
-
-
-// #define _fff_remove_newest(_id, amount)							\
-// do{																\
-// 	for (uint8_t _idx = amount; _idx > 0; _idx--)				\
-// 	{															\
-// 		if(!_fff_is_empty(_id))									\
-// 			_id.min_w++;										\
-// 		_id.write = _fff_wrap(_id, (_id.write-1));				\
-// 	}															\
-// }while(0)					
+}while(0)				
 
 
 // returns the next element from the fifo and removes it from the memory

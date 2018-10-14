@@ -130,15 +130,41 @@
     <Compile Include="fifofast_demo.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="helper\macros.h">
+    <Compile Include="utility\macros\com\macro_array.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="helper\macros_math.h">
+    <Compile Include="utility\macros\com\macro_math.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utility\macros\com\macro_type.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utility\macros\mpl\macro_cat.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utility\macros\mpl\macro_narg.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utility\macros\mpl\macro_vfunc.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="helper\" />
+    <Folder Include="utility\" />
+    <Folder Include="utility\macros\" />
+    <Folder Include="utility\macros\com\" />
+    <Folder Include="utility\macros\mpl\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="utility\macros\com\com readme.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="utility\macros\mpl\mpl readme.txt">
+      <SubType>compile</SubType>
+    </None>
+    <None Include="utility\macros\readme.txt">
+      <SubType>compile</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>
