@@ -49,7 +49,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		1
+#define FIFOFAST_VERSION_PATCH		2
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -118,8 +118,8 @@ typedef struct
 #define _fff__sizeof_array(_id)			_sizeof_array(((struct _fff__name_struct(_id)*)0)->data)
 
 // returns the length of the data array; fifo contrains are automatically applied
-#define	_fff__get_arraydepth8(_depth)	_limit((1<<(1+_log2_8((uint8_t)_depth-1))), 4, UINT8_MAX+1)
-#define	_fff__get_arraydepth16(_depth)	_limit((1<<(1+_log2_16((uint16_t)_depth-1))), 4, (uint16_t)INT16_MAX+1)
+#define	_fff__get_arraydepth8(_depth)	_limit((1<<(1+_log2((uint8_t)_depth-1))), 4, UINT8_MAX+1)
+#define	_fff__get_arraydepth16(_depth)	_limit((1<<(1+_log2((uint16_t)_depth-1))), 4, (uint16_t)INT16_MAX+1)
 
 
 //////////////////////////////////////////////////////////////////////////
