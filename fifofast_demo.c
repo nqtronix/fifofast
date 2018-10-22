@@ -11,23 +11,23 @@
 
 #include "fifofast.h"
 
-// all declarations CAN be moved into a seperate header file just like any oother declaration
+// all declarations CAN be moved into a separate header file just like any other declaration
 
 // declare a fifo with 4 elements of type 'uint8_t' with the name 'fifo_uint8'
-volatile _fff_declare(uint8_t, fifo_uint8, 4);
+_fff_declare(uint8_t, fifo_uint8, 4);
 
 // declare a fifo with 8 elements (6 elements is not possible, so it is automatically bumped to 8)
 // of type 'int_16' with the name 'fifo_uint16'
-volatile _fff_declare(int16_t, fifo_int16, 6);
+_fff_declare(int16_t, fifo_int16, 6);
 
 // declare a fifo to store 4 elements of the typedef'd struct 'frame_t'
-typedef struct  
+typedef struct
 {
 	uint16_t id;
 	uint8_t length;
 	uint8_t data[32];
 } frame_t;
-volatile _fff_declare(frame_t, fifo_frame, 4);
+_fff_declare(frame_t, fifo_frame, 4);
 
 
 int main(void)
@@ -41,36 +41,36 @@ int main(void)
 	// Note: The compiler will throw a warning per variable, these can be safely ignored
 
 	// general inspection of data stored in fifo
-	volatile uint8_t dbg0 = 0;
-	volatile uint8_t dbg1 = 0;
-	volatile uint8_t dbg2 = 0;
-	volatile uint8_t dbg3 = 0;
-	volatile uint8_t dbg4 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg0 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg1 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg2 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg3 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg4 = 0;
 
 	// for "_fff_read...()" macros only
-	volatile uint8_t dbg_read0 = 0;
-	volatile uint8_t dbg_read1 = 0;
-	volatile uint8_t dbg_read2 = 0;
-	volatile uint8_t dbg_read3 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_read0 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_read1 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_read2 = 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_read3 = 0;
 
 	// for "_fff_add...()" macros only
-	volatile uint8_t* dbg_p0 = 0;
-	volatile uint8_t* dbg_p1 = 0;
-	volatile uint8_t* dbg_p2 = 0;
-	volatile uint8_t* dbg_p3 = 0;
+	__attribute__ ((unused)) volatile uint8_t* dbg_p0 = 0;
+	__attribute__ ((unused)) volatile uint8_t* dbg_p1 = 0;
+	__attribute__ ((unused)) volatile uint8_t* dbg_p2 = 0;
+	__attribute__ ((unused)) volatile uint8_t* dbg_p3 = 0;
 
 	// inspection of macros that return a value
-	volatile uint8_t dbg_mem_depth	= 0;
-	volatile uint8_t dbg_mem_mask	= 0;
-	volatile uint8_t dbg_mem_level	= 0;
-	volatile uint8_t dbg_mem_free	= 0;
-	volatile uint8_t dbg_is_empty	= 0;
-	volatile uint8_t dbg_is_full	= 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_mem_depth	= 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_mem_mask	= 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_mem_level	= 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_mem_free	= 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_is_empty	= 0;
+	__attribute__ ((unused)) volatile uint8_t dbg_is_full	= 0;
 	
 	// initialize all fifos
-    _fff_init(fifo_uint8);
-	_fff_init(fifo_int16);
-	_fff_init(fifo_frame);
+    __attribute__ ((unused)) _fff_init(fifo_uint8);
+	__attribute__ ((unused)) _fff_init(fifo_int16);
+	__attribute__ ((unused)) _fff_init(fifo_frame);
 
 
 	// Note: only fifo_uint8 is tested here as uint8 are most easy to work with
