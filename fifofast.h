@@ -49,7 +49,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		2
+#define FIFOFAST_VERSION_PATCH		3
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 

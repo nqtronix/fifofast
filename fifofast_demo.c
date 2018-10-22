@@ -15,11 +15,11 @@
 // all declarations CAN be moved into a seperate header file just like any oother declaration
 
 // declare a fifo with 4 elements of type 'uint8_t' with the name 'fifo_uint8'
-_fff_declare(uint8_t, fifo_uint8, 4);
+volatile _fff_declare(uint8_t, fifo_uint8, 4);
 
 // declare a fifo with 8 elements (6 elements is not possible, so it is automatically bumped to 8)
 // of type 'int_16' with the name 'fifo_uint16'
-_fff_declare(int16_t, fifo_int16, 6);
+volatile _fff_declare(int16_t, fifo_int16, 6);
 
 // declare a fifo to store 4 elements of the typedef'd struct 'frame_t'
 typedef struct  
@@ -28,7 +28,7 @@ typedef struct
 	uint8_t length;
 	uint8_t data[32];
 } frame_t;
-_fff_declare(frame_t, fifo_frame, 4);
+volatile _fff_declare(frame_t, fifo_frame, 4);
 
 
 int main(void)
