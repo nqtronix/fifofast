@@ -9,7 +9,6 @@
  * and inspect the step-by-step changes with the debugger.
  */ 
 
-#include <stdio.h>
 #include "fifofast.h"
 
 // all declarations CAN be moved into a seperate header file just like any oother declaration

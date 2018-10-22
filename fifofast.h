@@ -25,7 +25,8 @@
 #ifndef FIFOFAST_H_
 #define FIFOFAST_H_
 
-#include <stdint.h>
+#include <stdint.h>		// required for data types (uint8_t, uint16_t, ...)
+#include <stddef.h>		// required for "NULL"
 
 // include required macros
 // by default, the project's macros will be used, they have to be located at:
@@ -49,7 +50,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		3
+#define FIFOFAST_VERSION_PATCH		4
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
