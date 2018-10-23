@@ -43,6 +43,15 @@
 #include "utility/macros/com/macro_math.h"
 #include "utility/macros/com/macro_type.h"
 
+
+//////////////////////////////////////////////////////////////////////////
+// User Config
+//////////////////////////////////////////////////////////////////////////
+
+// Defines the index data type for point-able fifos. This has to be a global setting (and not per
+// fifo) so that the inline functions can work accordingly yet fast
+#define FIFOFAST_INDEX_TYPE				uint8_t
+
 //////////////////////////////////////////////////////////////////////////
 // General Info
 //////////////////////////////////////////////////////////////////////////
@@ -50,7 +59,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		4
+#define FIFOFAST_VERSION_PATCH		5
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -75,33 +84,13 @@
 
 typedef struct
 {
-	const uint8_t data_size;	// bytes per element in data array
-	const uint8_t mask;			// (max amount of elements in data array) - 1
-	uint8_t read;				// index from which to read next element
-	uint8_t write;				// index to which to write next element
-	uint8_t level;				// possible writes without further checking
-	uint8_t data[];				// data storage array
-} fff8_t;
-
-typedef struct
-{
-	const uint16_t data_size;	// bytes per element in data array
-	const uint16_t mask;		// (max amount of elements in data array) - 1
-	uint16_t read;				// index from which to read next element
-	uint16_t write;				// index to which to write next element
-	uint16_t level;				// possible writes without further checking
-	uint8_t data[];				// data storage array
-} fff16_t;
-
-typedef struct
-{
-	const uint32_t data_size;	// bytes per element in data array
-	const uint32_t mask;		// (max amount of elements in data array) - 1
-	uint32_t read;				// index from which to read next element
-	uint32_t write;				// index to which to write next element
-	uint32_t level;				// possible writes without further checking
-	uint8_t data[];				// data storage array
-} fff32_t;
+	const FIFOFAST_INDEX_TYPE data_size;	// bytes per element in data array
+	const FIFOFAST_INDEX_TYPE mask;			// (max amount of elements in data array) - 1
+	FIFOFAST_INDEX_TYPE read;				// index from which to read next element
+	FIFOFAST_INDEX_TYPE write;				// index to which to write next element
+	FIFOFAST_INDEX_TYPE level;				// possible writes without further checking
+	uint8_t data[];							// data storage array
+} fff_t;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -110,8 +99,7 @@ typedef struct
 
 // returns the structure name matching to given ID without the keyword 'struct'
 #define _fff__name_struct(_id)			CAT(fff_, _id, _s)
-#define _fff__name_structp8(_id)		CAT(fff_, _id, _sp8)
-#define _fff__name_structp16(_id)		CAT(fff_, _id, _sp16)
+#define _fff__name_structp(_id)			CAT(fff_, _id, _sp)
 
 // returns matching type for internal index values; fifo contrains are automatically applied
 #define _fff__get_type(_depth)			typeof(_cast_min(_limit_lo(_depth,4)-1))
@@ -151,18 +139,20 @@ struct _fff__name_struct(_id) {											\
 	_fff__get_type(_depth) read;										\
 	_fff__get_type(_depth) write;										\
 	_fff__get_type(_depth) level;										\
-	_type data[_fff__get_arraydepth16(_depth)];							\
+	_type data[_fff__get_arraydepth16(_depth)] FIFOFAST_DATA_ALIGNMENT;	\
 } _id
 
-#define _fff_declare_p8(_type, _id, _depth)								\
-struct _fff__name_structp8(_id) {										\
-	const uint8_t data_size;											\
-	const uint8_t mask;													\
-	uint8_t read;														\
-	uint8_t write;														\
-	uint8_t level;														\
-	_type data[_fff__get_arraydepth8(_depth)];							\
+#define _fff_declare_p(_type, _id, _depth)								\
+struct _fff__name_structp(_id) {										\
+	const FIFOFAST_INDEX_TYPE data_size;								\
+	const FIFOFAST_INDEX_TYPE mask;										\
+	FIFOFAST_INDEX_TYPE read;											\
+	FIFOFAST_INDEX_TYPE write;											\
+	FIFOFAST_INDEX_TYPE level;											\
+	_type data[_fff__get_arraydepth8(_depth)] FIFOFAST_DATA_ALIGNMENT;	\
 } _id
+
+// TODO: make '_fff__get_arraydepth8(_depth)' dependent on FIFOFAST_INDEX_TYPE
 
 
 // initializes the fifo with the name '<_id>'
@@ -178,11 +168,11 @@ struct _fff__name_struct(_id) _id =										\
 	{}																	\
 }
 
-#define _fff_init_p8(_id)												\
-struct _fff__name_structp8(_id) _id =									\
+#define _fff_init_p(_id)												\
+struct _fff__name_structp(_id) _id =									\
 {																		\
 	_fff__sizeof_data(_id),												\
-	(_fff__sizeof_array(_id)-1),										\
+	_fff__sizeof_array(_id)-1,											\
 	0,																	\
 	0,																	\
 	0,																	\
