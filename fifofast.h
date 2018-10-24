@@ -58,8 +58,8 @@
 
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
-#define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		6
+#define FIFOFAST_VERSION_MINOR		4
+#define FIFOFAST_VERSION_PATCH		0
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -90,7 +90,7 @@ typedef struct
 	FIFOFAST_INDEX_TYPE write;				// index to which to write next element
 	FIFOFAST_INDEX_TYPE level;				// possible writes without further checking
 	uint8_t data[];							// data storage array
-} fff_t;
+} fff_proto_t;
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -99,7 +99,6 @@ typedef struct
 
 // returns the structure name matching to given ID without the keyword 'struct'
 #define _fff__name_struct(_id)			CAT(fff_, _id, _s)
-#define _fff__name_structp(_id)			CAT(fff_, _id, _sp)
 
 // returns matching type for internal index values; fifo contrains are automatically applied
 #define _fff__get_type(_depth)			typeof(_cast_min(_limit_lo(_depth,4)-1))
@@ -127,6 +126,9 @@ typedef struct
 // the maximum amount of elements and can thus be used by the inline functions. They still can be
 // accessed with all function-like macros provided for some speed gain. 
 //
+// The variant_fff_declare_pa(...) declares an array with structures as declared by _fff_declare_p(...).
+// 
+//
 // _id:		C conform identifier
 // _type:	any C type except pointers and structs. To store pointers or structs use typedef first
 // _depth:	maximum amount of elements, which can be stored in the fifo. Only values of 2^n are
@@ -143,7 +145,7 @@ struct _fff__name_struct(_id) {											\
 } _id
 
 #define _fff_declare_p(_type, _id, _depth)								\
-struct _fff__name_structp(_id) {										\
+struct _fff__name_struct(_id) {											\
 	const FIFOFAST_INDEX_TYPE data_size;								\
 	const FIFOFAST_INDEX_TYPE mask;										\
 	FIFOFAST_INDEX_TYPE read;											\
@@ -152,6 +154,12 @@ struct _fff__name_structp(_id) {										\
 	_type data[_fff__get_arraydepth8(_depth)];							\
 } _id
 
+// technically this creates an array with 0 elements, the correct size is filled in after
+// initialization with '_fff_init_pa(_id, _arraysize)' by GCC. NOT specifying a length ('[]')
+// results in a warning. Correct operation of current macro has been confirmed in simulator.
+#define _fff_declare_a(_type, _id, _depth)		_fff_declare(_type, _id, _depth) [0]
+#define _fff_declare_pa(_type, _id, _depth)		_fff_declare_p(_type, _id, _depth) [0]
+
 // TODO: make '_fff__get_arraydepth8(_depth)' dependent on FIFOFAST_INDEX_TYPE
 
 
@@ -159,6 +167,9 @@ struct _fff__name_structp(_id) {										\
 // This initialization function is technically identical to the term "definition" in c, but to
 // prevent confusion with "#define" it has been named '_fff_init()'. Since it is a definition it
 // can be only called once. Use '_fff_reset()' to reset any fifo back to it's original state.
+//
+// The variants '_fff_init_p(_id)' and '_fff_init_pa(_id, _arraysize)' are intended for the
+// respective declarations.
 #define _fff_init(_id)													\
 struct _fff__name_struct(_id) _id =										\
 {																		\
@@ -168,8 +179,17 @@ struct _fff__name_struct(_id) _id =										\
 	{}																	\
 }
 
+#define _fff_init_a(_id, _arraysize)									\
+struct _fff__name_struct(_id) _id [] =									\
+{[0 ... _arraysize-1] = {												\
+	0,																	\
+	0,																	\
+	0,																	\
+	{}																	\
+}}
+
 #define _fff_init_p(_id)												\
-struct _fff__name_structp(_id) _id =									\
+struct _fff__name_struct(_id) _id =										\
 {																		\
 	_fff__sizeof_data(_id),												\
 	_fff__sizeof_array(_id)-1,											\
@@ -178,6 +198,17 @@ struct _fff__name_structp(_id) _id =									\
 	0,																	\
 	{}																	\
 }
+
+#define _fff_init_pa(_id, _arraysize)									\
+struct _fff__name_struct(_id) _id [] =									\
+{[0 ... _arraysize-1] = {												\
+	_fff__sizeof_data(_id),												\
+	_fff__sizeof_array(_id)-1,											\
+	0,																	\
+	0,																	\
+	0,																	\
+	{}																	\
+}}
 
 
 // masks a given index value based on a given fifo

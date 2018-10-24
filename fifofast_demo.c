@@ -42,6 +42,10 @@ typedef union __attribute__((aligned(4), packed))
 // declare a fifo to store 4 elements of the typedef'd union 'frame_u'
 _fff_declare(frame_u, fifo_frame, 4);
 
+// declare an array (indicated by the suffix _a) of fifos. You specify the size of each fifo here,
+// NOT the total amount of fifos!
+_fff_declare_a(uint8_t, fifo_array, 16);
+
 
 int main(void)
 {
@@ -84,6 +88,9 @@ int main(void)
     __attribute__ ((unused)) _fff_init(fifo_uint8);
 	__attribute__ ((unused)) _fff_init(fifo_int16);
 	__attribute__ ((unused)) _fff_init(fifo_frame);
+	// create 5 fifos within the fifo array
+	__attribute__ ((unused)) _fff_init_a(fifo_array, 5);
+	asm volatile ("nop");								// easy breakpoint
 
 
 	// Note: only fifo_uint8 is tested here as uint8 are most easy to work with
@@ -92,7 +99,7 @@ int main(void)
 	dbg_mem_mask	= _fff_mem_mask(fifo_uint8);		// = 3 (= 0b11, constant)
 	dbg_mem_level	= _fff_mem_level(fifo_uint8);		// = 0
 	dbg_mem_free	= _fff_mem_free(fifo_uint8);		// = 3 (see macro description)
-	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// != 0 (= true, note that the actually value is NOT guranteed to be '1'!)
+	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// != 0 (= true, note that the actually value is NOT guaranteed to be '1'!)
 	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
 	asm volatile ("nop");								// easy breakpoint
 
@@ -279,7 +286,7 @@ int main(void)
 	// Test Case REMOVE_LITE
 	//////////////////////////////////////////////////////////////////////////
 
-	// fill with any data (macros have been prooven o work before)
+	// fill with any data (macros have been proved to work before)
 	_fff_write_lite(fifo_uint8, 0x23);
 	_fff_write_lite(fifo_uint8, 0x24);
 	_fff_write_lite(fifo_uint8, 0x25);
@@ -335,11 +342,11 @@ int main(void)
 	asm volatile ("nop");								// easy breakpoint
 
 
-		//////////////////////////////////////////////////////////////////////////
-	// Test Case REMOVE_LITE
+	//////////////////////////////////////////////////////////////////////////
+	// Test Case REMOVE
 	//////////////////////////////////////////////////////////////////////////
 
-	// fill with any data (macros have been prooven o work before)
+	// fill with any data (macros have been proved to work before)
 	_fff_write_lite(fifo_uint8, 0x13);
 	_fff_write_lite(fifo_uint8, 0x14);
 	_fff_write_lite(fifo_uint8, 0x15);
@@ -393,6 +400,25 @@ int main(void)
 	dbg_is_empty	= _fff_is_empty(fifo_uint8);		// != 0 (= true, note that the actually value is NOT guaranteed to be '1'!)
 	dbg_is_full		= _fff_is_full(fifo_uint8);			// = 0 (= false)
 	asm volatile ("nop");								// easy breakpoint
+
+
+	//////////////////////////////////////////////////////////////////////////
+	// Demonstrate usage of fifo array
+	//////////////////////////////////////////////////////////////////////////
+
+	// macros have been proved to work, so to see the result just look into the SRAM directly
+	// These two loops copy the printable chars into the sram, each fifo gets a section of 16
+	// consecutive characters.
+	uint8_t data = ' ';
+	for (uint8_t fifo_nr = 0; fifo_nr < _sizeof_array(fifo_array); fifo_nr++)
+	{
+		for (uint8_t idx = 0; idx < _fff_mem_depth(fifo_array[0]); idx++)
+		{
+			_fff_write(fifo_array[fifo_nr], data);
+			data += 1;
+		}
+	}
+
 
 	// End simulation
     while (1) asm volatile ("nop");
