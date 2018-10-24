@@ -59,7 +59,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		3
-#define FIFOFAST_VERSION_PATCH		5
+#define FIFOFAST_VERSION_PATCH		6
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -139,7 +139,7 @@ struct _fff__name_struct(_id) {											\
 	_fff__get_type(_depth) read;										\
 	_fff__get_type(_depth) write;										\
 	_fff__get_type(_depth) level;										\
-	_type data[_fff__get_arraydepth16(_depth)] FIFOFAST_DATA_ALIGNMENT;	\
+	_type data[_fff__get_arraydepth16(_depth)];							\
 } _id
 
 #define _fff_declare_p(_type, _id, _depth)								\
@@ -149,7 +149,7 @@ struct _fff__name_structp(_id) {										\
 	FIFOFAST_INDEX_TYPE read;											\
 	FIFOFAST_INDEX_TYPE write;											\
 	FIFOFAST_INDEX_TYPE level;											\
-	_type data[_fff__get_arraydepth8(_depth)] FIFOFAST_DATA_ALIGNMENT;	\
+	_type data[_fff__get_arraydepth8(_depth)];							\
 } _id
 
 // TODO: make '_fff__get_arraydepth8(_depth)' dependent on FIFOFAST_INDEX_TYPE
