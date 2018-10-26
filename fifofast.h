@@ -59,7 +59,7 @@
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		4
-#define FIFOFAST_VERSION_PATCH		0
+#define FIFOFAST_VERSION_PATCH		1
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -157,8 +157,8 @@ struct _fff__name_struct(_id) {											\
 // technically this creates an array with 0 elements, the correct size is filled in after
 // initialization with '_fff_init_pa(_id, _arraysize)' by GCC. NOT specifying a length ('[]')
 // results in a warning. Correct operation of current macro has been confirmed in simulator.
-#define _fff_declare_a(_type, _id, _depth)		_fff_declare(_type, _id, _depth) [0]
-#define _fff_declare_pa(_type, _id, _depth)		_fff_declare_p(_type, _id, _depth) [0]
+#define _fff_declare_a(_type, _id, _depth)		_fff_declare(_type, _id, _depth) []
+#define _fff_declare_pa(_type, _id, _depth)		_fff_declare_p(_type, _id, _depth) []
 
 // TODO: make '_fff__get_arraydepth8(_depth)' dependent on FIFOFAST_INDEX_TYPE
 

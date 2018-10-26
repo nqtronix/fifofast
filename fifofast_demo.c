@@ -46,6 +46,8 @@ _fff_declare(frame_u, fifo_frame, 4);
 // NOT the total amount of fifos!
 _fff_declare_a(uint8_t, fifo_array, 16);
 
+// create 5 fifos within the fifo array
+__attribute__ ((unused)) _fff_init_a(fifo_array, 5);
 
 int main(void)
 {
@@ -88,8 +90,6 @@ int main(void)
     __attribute__ ((unused)) _fff_init(fifo_uint8);
 	__attribute__ ((unused)) _fff_init(fifo_int16);
 	__attribute__ ((unused)) _fff_init(fifo_frame);
-	// create 5 fifos within the fifo array
-	__attribute__ ((unused)) _fff_init_a(fifo_array, 5);
 	asm volatile ("nop");								// easy breakpoint
 
 
