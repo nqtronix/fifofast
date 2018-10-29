@@ -18,17 +18,21 @@
 #define _limit_lo(arg, lo)		((arg)<lo? lo : (arg))
 #define _limit_hi(arg, hi)		((arg)>hi? hi : (arg))
 
+
+// returns smallest type for given integer
+#define _type_min(_integer)		typeof(_type_cast_min(_integer))
+
 // By default all literals are interpreted as a int, whose size varies between systems
 // This macro forces minimum memory usage by casting a literal to the smallest data type suitable.
 // Unsigned types are proffered.
-#define _cast_min(_literal)																			\
-	(__builtin_choose_expr((_literal)>0,															\
-	__builtin_choose_expr((_literal)<=UINT8_MAX, (uint8_t) (_literal),								\
-	__builtin_choose_expr((_literal)<=UINT16_MAX, (uint16_t) (_literal),							\
-	__builtin_choose_expr((_literal)<=UINT32_MAX, (uint32_t) (_literal), (uint64_t) (_literal)))),	\
-	__builtin_choose_expr((_literal)>=INT8_MIN, (int8_t) (_literal),								\
-	__builtin_choose_expr((_literal)>=INT16_MIN, (int16_t) (_literal),								\
-	__builtin_choose_expr((_literal)>=INT32_MIN, (int32_t) (_literal), (int64_t) (_literal))))))
+#define _type_cast_min(_integer)																			\
+	(__builtin_choose_expr((_integer)>0,															\
+	__builtin_choose_expr((_integer)<=UINT8_MAX, (uint8_t) (_integer),								\
+	__builtin_choose_expr((_integer)<=UINT16_MAX, (uint16_t) (_integer),							\
+	__builtin_choose_expr((_integer)<=UINT32_MAX, (uint32_t) (_integer), (uint64_t) (_integer)))),	\
+	__builtin_choose_expr((_integer)>=INT8_MIN, (int8_t) (_integer),								\
+	__builtin_choose_expr((_integer)>=INT16_MIN, (int16_t) (_integer),								\
+	__builtin_choose_expr((_integer)>=INT32_MIN, (int32_t) (_integer), (int64_t) (_integer))))))
 
 
 

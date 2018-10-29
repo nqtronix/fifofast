@@ -61,7 +61,7 @@ typedef uint8_t fff_index_t;
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
 #define FIFOFAST_VERSION_MINOR		4
-#define FIFOFAST_VERSION_PATCH		2
+#define FIFOFAST_VERSION_PATCH		3
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
@@ -103,7 +103,7 @@ typedef struct
 #define _fff__name_struct(_id)			CAT(fff_, _id, _s)
 
 // returns matching type for internal index values; fifo contrains are automatically applied
-#define _fff__get_type(_depth)			typeof(_cast_min(_limit_lo(_depth,4)-1))
+#define _fff__get_type(_depth)			_type_min(_limit_lo(_depth,4)-1)
 #define _fff__sizeof_data(_id)			sizeof(((struct _fff__name_struct(_id)*)0)->data[0])
 #define _fff__sizeof_array(_id)			_sizeof_array(((struct _fff__name_struct(_id)*)0)->data)
 
