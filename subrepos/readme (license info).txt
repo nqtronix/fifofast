@@ -1,0 +1,1 @@
+This folder contains other projects with their own source code and associated files. The included LICENSE files ONLY apply to the folder (and the project) they are located in.
