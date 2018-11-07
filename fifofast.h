@@ -32,7 +32,7 @@
 // by default, the project's macros will be used, they have to be located at:
 // "utility/macros/..."
 //
-// If your project has no global macros, you can re-direct the compiler to the included files:
+// If your project has no global macros, you can re-direct GCC to the included files:
 // a) in Atmel Studio edit project properties (ALT+F7 OR "Project -> <project name> Properties...")
 // b) Go to "Toolchain / AVR/GNU C Compiler / Directories"
 // c) add the relative path to: "../src/subrepo/fifofast/" or wherever this code is located. DONE!
@@ -91,25 +91,25 @@ typedef struct
 	fff_index_t read;				// index from which to read next element
 	fff_index_t write;				// index to which to write next element
 	fff_index_t level;				// possible writes without further checking
-	uint8_t data[];							// data storage array
+	uint8_t data[];					// data storage array
 } fff_proto_t;
 
 
 //////////////////////////////////////////////////////////////////////////
-// internal macros (_fff__*)
+// internal macros (_FFF_*)
 //////////////////////////////////////////////////////////////////////////
 
 // returns the structure name matching to given ID without the keyword 'struct'
-#define _fff__name_struct(_id)			CAT(fff_, _id, _s)
+#define _FFF_NAME_STRUCT(_id)			CAT(fff_, _id, _s)
 
 // returns matching type for internal index values; fifo contrains are automatically applied
-#define _fff__get_type(_depth)			_type_min(_limit_lo(_depth,4)-1)
-#define _fff__sizeof_data(_id)			sizeof(((struct _fff__name_struct(_id)*)0)->data[0])
-#define _fff__sizeof_array(_id)			_sizeof_array(((struct _fff__name_struct(_id)*)0)->data)
+#define _FFF_GET_TYPE(_depth)			_type_min(_limit_lo(_depth,4)-1)
+#define _FFF_SIZEOF_DATA(_id)			sizeof(((struct _FFF_NAME_STRUCT(_id)*)0)->data[0])
+#define _FFF_SIZEOF_ARRAY(_id)			_sizeof_array(((struct _FFF_NAME_STRUCT(_id)*)0)->data)
 
 // returns the length of the data array; fifo contrains are automatically applied
-#define	_fff__get_arraydepth8(_depth)	_limit((1<<(1+_log2((uint8_t)_depth-1))), 4, UINT8_MAX+1)
-#define	_fff__get_arraydepth16(_depth)	_limit((1<<(1+_log2((uint16_t)_depth-1))), 4, (uint16_t)INT16_MAX+1)
+#define	_FFF_GET_ARRAYDEPTH8(_depth)	_limit((1<<(1+_log2((uint8_t)_depth-1))), 4, UINT8_MAX+1)
+#define	_FFF_GET_ARRAYDEPTH16(_depth)	_limit((1<<(1+_log2((uint16_t)_depth-1))), 4, (uint16_t)INT16_MAX+1)
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -139,21 +139,21 @@ typedef struct
 //			Additional 3/6/10 bytes are used for fifos with with <= 2^8/ <= 2^16 / <= 2^31 elements.
 
 #define _fff_declare(_type, _id, _depth)								\
-struct _fff__name_struct(_id) {											\
-	_fff__get_type(_depth) read;										\
-	_fff__get_type(_depth) write;										\
-	_fff__get_type(_depth) level;										\
-	_type data[_fff__get_arraydepth16(_depth)];							\
+struct _FFF_NAME_STRUCT(_id) {											\
+	_FFF_GET_TYPE(_depth) read;										\
+	_FFF_GET_TYPE(_depth) write;										\
+	_FFF_GET_TYPE(_depth) level;										\
+	_type data[_FFF_GET_ARRAYDEPTH16(_depth)];							\
 } _id
 
 #define _fff_declare_p(_type, _id, _depth)								\
-struct _fff__name_struct(_id) {											\
+struct _FFF_NAME_STRUCT(_id) {											\
 	const fff_index_t data_size;										\
 	const fff_index_t mask;												\
 	fff_index_t read;													\
 	fff_index_t write;													\
 	fff_index_t level;													\
-	_type data[_fff__get_arraydepth8(_depth)];							\
+	_type data[_FFF_GET_ARRAYDEPTH8(_depth)];							\
 } _id
 
 // technically this creates an array with 0 elements, the correct size is filled in after
@@ -162,7 +162,7 @@ struct _fff__name_struct(_id) {											\
 #define _fff_declare_a(_type, _id, _depth)		_fff_declare(_type, _id, _depth) []
 #define _fff_declare_pa(_type, _id, _depth)		_fff_declare_p(_type, _id, _depth) []
 
-// TODO: make '_fff__get_arraydepth8(_depth)' dependent on fff_index_t
+// TODO: make '_FFF_GET_ARRAYDEPTH8(_depth)' dependent on fff_index_t
 
 
 // initializes the fifo with the name '<_id>'
@@ -173,7 +173,7 @@ struct _fff__name_struct(_id) {											\
 // The variants '_fff_init_p(_id)' and '_fff_init_pa(_id, _arraysize)' are intended for the
 // respective declarations.
 #define _fff_init(_id)													\
-struct _fff__name_struct(_id) _id =										\
+struct _FFF_NAME_STRUCT(_id) _id =										\
 {																		\
 	0,																	\
 	0,																	\
@@ -182,7 +182,7 @@ struct _fff__name_struct(_id) _id =										\
 }
 
 #define _fff_init_a(_id, _arraysize)									\
-struct _fff__name_struct(_id) _id [] =									\
+struct _FFF_NAME_STRUCT(_id) _id [] =									\
 {[0 ... _arraysize-1] = {												\
 	0,																	\
 	0,																	\
@@ -191,10 +191,10 @@ struct _fff__name_struct(_id) _id [] =									\
 }}
 
 #define _fff_init_p(_id)												\
-struct _fff__name_struct(_id) _id =										\
+struct _FFF_NAME_STRUCT(_id) _id =										\
 {																		\
-	_fff__sizeof_data(_id),												\
-	_fff__sizeof_array(_id)-1,											\
+	_FFF_SIZEOF_DATA(_id),												\
+	_FFF_SIZEOF_ARRAY(_id)-1,											\
 	0,																	\
 	0,																	\
 	0,																	\
@@ -202,10 +202,10 @@ struct _fff__name_struct(_id) _id =										\
 }
 
 #define _fff_init_pa(_id, _arraysize)									\
-struct _fff__name_struct(_id) _id [] =									\
+struct _FFF_NAME_STRUCT(_id) _id [] =									\
 {[0 ... _arraysize-1] = {												\
-	_fff__sizeof_data(_id),												\
-	_fff__sizeof_array(_id)-1,											\
+	_FFF_SIZEOF_DATA(_id),												\
+	_FFF_SIZEOF_ARRAY(_id)-1,											\
 	0,																	\
 	0,																	\
 	0,																	\
