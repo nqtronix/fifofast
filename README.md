@@ -83,7 +83,7 @@ You find this a variation of this snippet and much more in [`fifofast_test.c`](f
 This section is written especially for everyone who is **not familiar** with the used tools. If you run into problems, please [ask for clarification](#get-help).<br>
 
 ### Step 1: Software and Tools
- - [**Atmel Studio 7.0**][tool-atmel-studio-7-0]** (Build 1931) [free**]<br>
+ - [**Atmel Studio 7.0**][tool-atmel-studio-7-0]** (Build 1931) [free]**<br>
    The installer contains all tools you need to open, edit, compile, simulate and flash this code. If you favor another development tool, feel free to use it instead. (But please understand that I can not provide any support).
  - **An AVR8 ISP/JTAG programmer [optional]**<br>
    To program AVR8 MCUs I use the [AVR Dragon][tool-avr-dragon]. It can be also used as a debugger and is available within Atmel Studio by default.
@@ -137,7 +137,7 @@ For some applications you may need multiple identical fifos which can be selecte
 To create a fifo array, declare its structure first:
 ```c
 // declare an array (suffix _a) of fifos with 16 elements each.
-_fff_declare_a(uint8_t, fifo_array, 16);
+_fff_declare_a(uint8_t, fifo_array, 16, 5);
 ```
 Next initialize it and specify the amount of fifos you need:
 ```c
