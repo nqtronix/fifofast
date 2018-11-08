@@ -60,8 +60,8 @@ typedef uint8_t fff_index_t;
 
 // version numbering is based on "Semantic Versioning 2.0.0" (semver.org)
 #define FIFOFAST_VERSION_MAJOR		0
-#define FIFOFAST_VERSION_MINOR		4
-#define FIFOFAST_VERSION_PATCH		3
+#define FIFOFAST_VERSION_MINOR		5
+#define FIFOFAST_VERSION_PATCH		0
 #define FIFOFAST_VERSION_SUFFIX		
 #define FIFOFAST_VERSION_META		
 
