@@ -43,9 +43,8 @@ typedef union __attribute__((aligned(4), packed))
 // declare a fifo to store 4 elements of the typedef'd union 'frame_u'
 _fff_declare(frame_u, fifo_frame, 4);
 
-// declare an array (indicated by the suffix _a) of fifos. You specify the size of each fifo here,
 // NOT the total amount of fifos!
-_fff_declare_a(uint8_t, fifo_array, 16);
+// declare an array (indicated by the suffix _a) of 5 fifos with 16 elements each.
 
 // create 5 fifos within the fifo array
 __attribute__ ((unused)) _fff_init_a(fifo_array, 5);

@@ -140,7 +140,7 @@ typedef struct
 
 #define _fff_declare(_type, _id, _depth)								\
 struct _FFF_NAME_STRUCT(_id) {											\
-	_FFF_GET_TYPE(_depth) read;										\
+	_FFF_GET_TYPE(_depth) read;											\
 	_FFF_GET_TYPE(_depth) write;										\
 	_FFF_GET_TYPE(_depth) level;										\
 	_type data[_FFF_GET_ARRAYDEPTH16(_depth)];							\
@@ -156,11 +156,9 @@ struct _FFF_NAME_STRUCT(_id) {											\
 	_type data[_FFF_GET_ARRAYDEPTH8(_depth)];							\
 } _id
 
-// technically this creates an array with 0 elements, the correct size is filled in after
-// initialization with '_fff_init_pa(_id, _arraysize)' by GCC. NOT specifying a length ('[]')
-// results in a warning. Correct operation of current macro has been confirmed in simulator.
-#define _fff_declare_a(_type, _id, _depth)		_fff_declare(_type, _id, _depth) []
-#define _fff_declare_pa(_type, _id, _depth)		_fff_declare_p(_type, _id, _depth) []
+// declares an array with '_size' fifos. '_size' can be any positive integer.
+#define _fff_declare_a(_type, _id, _depth, _size)		_fff_declare(_type, _id, _depth) [_size]
+#define _fff_declare_pa(_type, _id, _depth, _size)		_fff_declare_p(_type, , _depth) [_size]
 
 // TODO: make '_FFF_GET_ARRAYDEPTH8(_depth)' dependent on fff_index_t
 
