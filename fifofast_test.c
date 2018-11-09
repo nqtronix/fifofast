@@ -17,7 +17,7 @@ void fifofast_test_macro_initial()
 	UT_ASSERT(_fff_mem_depth(fifo_uint8)	== 4);		// constant
 	UT_ASSERT(_fff_mem_mask(fifo_uint8)		== 3);		// constant = 0b11
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 0);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 4);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		!= 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 }
@@ -30,7 +30,7 @@ void fifofast_test_macro_write(uint8_t startvalue)
 	_fff_write_lite(fifo_uint8, startvalue+1);
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 2);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 1);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 2);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 	
@@ -44,7 +44,7 @@ void fifofast_test_macro_write(uint8_t startvalue)
 	_fff_write(fifo_uint8, startvalue+3);
 	_fff_write(fifo_uint8, startvalue+4);
 
-	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 3);
+	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 4);
 	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		!= 0);
@@ -58,7 +58,7 @@ void fifofast_test_macro_write(uint8_t startvalue)
 	
 	// Test reset once only
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 0);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 4);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		!= 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 }
@@ -74,7 +74,7 @@ void fifofast_test_macro_peek(uint8_t startvalue)
 	_fff_peek(fifo_uint8, 2) = startvalue+4;
 	
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 3);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 1);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 	
@@ -99,7 +99,7 @@ void fifofast_test_macro_read(uint8_t startvalue)
 	UT_ASSERT(_fff_read_lite(fifo_uint8)	== startvalue+1);
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 1);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 2);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 	
@@ -110,7 +110,7 @@ void fifofast_test_macro_read(uint8_t startvalue)
 	UT_ASSERT(_fff_read(fifo_uint8)			== 0x00);
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 0);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 4);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		!= 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 	
@@ -134,7 +134,7 @@ void fifofast_test_macro_add(uint8_t startvalue)
 	if(dbg_p1 != 0) *dbg_p1 = startvalue+1;
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 2);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 1);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 2);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 		
@@ -155,7 +155,7 @@ void fifofast_test_macro_add(uint8_t startvalue)
 	if(dbg_p1 != 0) *dbg_p1 = startvalue+3;
 	if(dbg_p2 != 0) *dbg_p2 = startvalue+4;
 
-	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 3);
+	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 4);
 	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		!= 0);
@@ -182,7 +182,7 @@ void fifofast_test_macro_remove_lite(uint8_t startvalue)
 	_fff_remove_lite(fifo_uint8, 2);
 		
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 2);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 1);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 2);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 		
@@ -194,7 +194,7 @@ void fifofast_test_macro_remove_lite(uint8_t startvalue)
 	_fff_remove_lite(fifo_uint8, 1);
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 1);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 2);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 		
@@ -205,7 +205,7 @@ void fifofast_test_macro_remove_lite(uint8_t startvalue)
 	_fff_remove_lite(fifo_uint8, 1);
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 0);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 4);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		!= 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 	
@@ -222,10 +222,10 @@ void fifofast_test_macro_remove(uint8_t startvalue)
 	// fifo is now full
 	
 	
-	// _remove 0 (Test case: amount <= 0 elements)
+	// _remove 0 (Test case: amount == 0 elements)
 	_fff_remove(fifo_uint8, 0);
 
-	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 3);
+	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 4);
 	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		!= 0);
@@ -236,22 +236,11 @@ void fifofast_test_macro_remove(uint8_t startvalue)
 	UT_ASSERT(_fff_peek(fifo_uint8, 3)		== startvalue+3);
 
 
-	// _remove 4 (Test case: amount > _fff_mem_level() w/ fifo full)
-	_fff_remove(fifo_uint8, 4);
-
-	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 1);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 2);
-	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
-	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
-	
-	UT_ASSERT(_fff_peek(fifo_uint8, 0)		== startvalue+3);
-
-
-	// _remove 4 (Test case: amount > _fff_mem_level() w/ fifo not full)
+	// _remove 4 (Test case: amount == _fff_mem_level() w/ fifo full)
 	_fff_remove(fifo_uint8, 4);
 
 	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 0);
-	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 3);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 4);
 	UT_ASSERT(_fff_is_empty(fifo_uint8)		!= 0);
 	UT_ASSERT(_fff_is_full(fifo_uint8)		== 0);
 }
@@ -266,7 +255,7 @@ void fifofast_test_func_initial(fff_proto_t* fifo)
 	//UT_ASSERT(fff_mem_depth(fifo)			== 4);		// constant
 	UT_ASSERT(fff_mem_mask(fifo)			== 3);		// constant = 0b11
 	UT_ASSERT(fff_mem_level(fifo)			== 0);
-	UT_ASSERT(fff_mem_free(fifo)			== 3);
+	UT_ASSERT(fff_mem_free(fifo)			== 4);
 	UT_ASSERT(fff_is_empty(fifo)			!= 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 }
@@ -281,7 +270,7 @@ void fifofast_test_func_write(fff_proto_t* fifo, uint8_t startvalue)
 	fff_write_lite(fifo, &tmp1);
 
 	UT_ASSERT(fff_mem_level(fifo)			== 2);
-	UT_ASSERT(fff_mem_free(fifo)			== 1);
+	UT_ASSERT(fff_mem_free(fifo)			== 2);
 	UT_ASSERT(fff_is_empty(fifo)			== 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 	
@@ -297,7 +286,7 @@ void fifofast_test_func_write(fff_proto_t* fifo, uint8_t startvalue)
 	fff_write(fifo, &tmp3);
 	fff_write(fifo, &tmp4);
 
-	UT_ASSERT(fff_mem_level(fifo)			== 3);
+	UT_ASSERT(fff_mem_level(fifo)			== 4);
 	UT_ASSERT(fff_mem_free(fifo)			== 0);
 	UT_ASSERT(fff_is_empty(fifo)			== 0);
 	UT_ASSERT(fff_is_full(fifo)				!= 0);
@@ -311,7 +300,7 @@ void fifofast_test_func_write(fff_proto_t* fifo, uint8_t startvalue)
 	
 	// Test reset once only
 	UT_ASSERT(fff_mem_level(fifo)			== 0);
-	UT_ASSERT(fff_mem_free(fifo)			== 3);
+	UT_ASSERT(fff_mem_free(fifo)			== 4);
 	UT_ASSERT(fff_is_empty(fifo)			!= 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 }
@@ -332,7 +321,7 @@ void fifofast_test_func_peek(fff_proto_t* fifo, uint8_t startvalue)
 	fff_peek_write(fifo, 2, &tmp4);
 	
 	UT_ASSERT(fff_mem_level(fifo)			== 3);
-	UT_ASSERT(fff_mem_free(fifo)			== 0);
+	UT_ASSERT(fff_mem_free(fifo)			== 1);
 	UT_ASSERT(fff_is_empty(fifo)			== 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 	
@@ -447,7 +436,7 @@ void fifofast_test_func_remove_lite(fff_proto_t* fifo, uint8_t startvalue)
 	fff_remove_lite(fifo, 2);
 	
 	UT_ASSERT(fff_mem_level(fifo)			== 2);
-	UT_ASSERT(fff_mem_free(fifo)			== 1);
+	UT_ASSERT(fff_mem_free(fifo)			== 2);
 	UT_ASSERT(fff_is_empty(fifo)			== 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 	
@@ -459,7 +448,7 @@ void fifofast_test_func_remove_lite(fff_proto_t* fifo, uint8_t startvalue)
 	fff_remove_lite(fifo, 1);
 
 	UT_ASSERT(fff_mem_level(fifo)			== 1);
-	UT_ASSERT(fff_mem_free(fifo)			== 2);
+	UT_ASSERT(fff_mem_free(fifo)			== 3);
 	UT_ASSERT(fff_is_empty(fifo)			== 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 	
@@ -470,7 +459,7 @@ void fifofast_test_func_remove_lite(fff_proto_t* fifo, uint8_t startvalue)
 	fff_remove_lite(fifo, 1);
 
 	UT_ASSERT(fff_mem_level(fifo)			== 0);
-	UT_ASSERT(fff_mem_free(fifo)			== 3);
+	UT_ASSERT(fff_mem_free(fifo)			== 4);
 	UT_ASSERT(fff_is_empty(fifo)			!= 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
 	
@@ -491,10 +480,10 @@ void fifofast_test_func_remove(fff_proto_t* fifo, uint8_t startvalue)
 	// fifo is now full
 	
 	
-	// _remove 0 (Test case: amount <= 0 elements)
+	// _remove 0 (Test case: amount == 0 elements)
 	fff_remove(fifo, 0);
 
-	UT_ASSERT(fff_mem_level(fifo)			== 3);
+	UT_ASSERT(fff_mem_level(fifo)			== 4);
 	UT_ASSERT(fff_mem_free(fifo)			== 0);
 	UT_ASSERT(fff_is_empty(fifo)			== 0);
 	UT_ASSERT(fff_is_full(fifo)				!= 0);
@@ -505,22 +494,12 @@ void fifofast_test_func_remove(fff_proto_t* fifo, uint8_t startvalue)
 	UT_ASSERT(*(uint8_t*)fff_peek_read(fifo, 3)		== startvalue+3);
 
 
-	// _remove 4 (Test case: amount > _fff_mem_level() w/ fifo full)
-	fff_remove(fifo, 4);
-
-	UT_ASSERT(fff_mem_level(fifo)			== 1);
-	UT_ASSERT(fff_mem_free(fifo)			== 2);
-	UT_ASSERT(fff_is_empty(fifo)			== 0);
-	UT_ASSERT(fff_is_full(fifo)				== 0);
-	
-	UT_ASSERT(*(uint8_t*)fff_peek_read(fifo, 0)		== startvalue+3);
-
-
-	// _remove 4 (Test case: amount > _fff_mem_level() w/ fifo not full)
+	// _remove 4 (Test case: amount == _fff_mem_level() w/ fifo full)
 	fff_remove(fifo, 4);
 
 	UT_ASSERT(fff_mem_level(fifo)			== 0);
-	UT_ASSERT(fff_mem_free(fifo)			== 3);
+	UT_ASSERT(fff_mem_free(fifo)			== 4);
 	UT_ASSERT(fff_is_empty(fifo)			!= 0);
 	UT_ASSERT(fff_is_full(fifo)				== 0);
+
 }

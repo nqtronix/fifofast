@@ -143,7 +143,7 @@ typedef struct
 struct _FFF_NAME_STRUCT(_id) {											\
 	_FFF_GET_TYPE(_depth) read;											\
 	_FFF_GET_TYPE(_depth) write;										\
-	_FFF_GET_TYPE(_depth) level;										\
+	_FFF_GET_TYPE(_depth+1) level;										\
 	_type data[_FFF_GET_ARRAYDEPTH16(_depth)];							\
 } _id
 
@@ -234,7 +234,7 @@ struct _FFF_NAME_STRUCT(_id) _id [] =									\
 #define _fff_is_empty(_id)				(_id.level == 0)
 
 // returns !0 if full
-#define _fff_is_full(_id)				((_id.write == _id.read) && (_id.level == _fff_mem_mask(_id)))
+#define _fff_is_full(_id)				(_id.level > _fff_mem_mask(_id))
 
 // returns the current fill level of the fifo (the amount of elements that can be read)
 // Note that this macro is meant to check if access through _fff_peek(...) is possible. If the fifo
@@ -248,7 +248,7 @@ struct _FFF_NAME_STRUCT(_id) _id [] =									\
 // is almost full (depth-1, should only rarely happen normally), it will return 0.
 // Use !_fff_is_full(...) to determine whether can accept further elements.
 // _id: C conform identifier
-#define _fff_mem_free(_id)				(_fff_mem_mask(_id) - _id.level)
+#define _fff_mem_free(_id)				(_fff_mem_depth(_id) - _id.level)
 
 
 // clears/ resets buffer completely
@@ -258,19 +258,14 @@ struct _FFF_NAME_STRUCT(_id) _id [] =									\
 	
 // removes a certain number of elements or less, if not enough elements are available.
 // This function is especially useful after data has been used by _fff_peek(...)
-// NOTE: This macro can only delete up to _fff_depth(_id)-1 elements! Workaround: Call twice or use
-// _fff_reset(_id) instead.
 // _id:		C conform identifier
-// amount:	Amount of elements which will be removed
+// amount:	Amount of elements which will be removed, amount >= 0 (positive integer)
 #define _fff_remove(_id, amount)								\
 do{																\
-	if(amount > 0)												\
-	{															\
-		typeof(_id.level) _amount = (typeof(_id.level))amount;	\
-		if(amount > _id.level)									\
-			_amount = _id.level;								\
-		_fff_remove_lite(_id, _amount);							\
-	}															\
+	typeof(_id.level) _amount = amount;							\
+	if(amount > _id.level)										\
+		_amount = _id.level;									\
+	_fff_remove_lite(_id, _amount);								\
 }while(0)
 					
 // removes a certain number of elements. The user must ensure that the given amount of elements can
@@ -278,13 +273,10 @@ do{																\
 // _fff_remove().
 // This function is especially useful after data has been used by _fff_peek(...)
 // _id:		C conform identifier
-// amount:	Amount of elements which will be removed; must be 1 <= amount <= _fff_mem_level(_id);
+// amount:	Amount of elements which will be removed; must be 0 <= amount <= _fff_mem_level(_id);
 #define _fff_remove_lite(_id, amount)							\
 do{																\
-	if(!_fff_is_full(_id))										\
-		_id.level -= amount;									\
-	else														\
-		_id.level -= (amount-1);								\
+	_id.level -= amount;										\
 	_id.read = _fff_wrap(_id, _id.read+amount);					\
 }while(0)				
 
@@ -295,9 +287,7 @@ do{																\
 #define _fff_read_lite(_id)										\
 ({																\
 	typeof(_id.data[0])	_return;								\
-	if(!_fff_is_full(_id))										\
-		_id.level--;											\
-																\
+	_id.level--;												\
 	_return = _id.data[_id.read];								\
 	_id.read = _fff_wrap(_id, (_id.read+1));					\
 	_return;													\
@@ -325,8 +315,7 @@ do{																\
 do{																\
 	_id.data[_id.write] = (newdata);							\
 	_id.write = _fff_wrap(_id, (_id.write+1));					\
-	if(_id.level != _fff_mem_mask(_id))							\
-		_id.level++;											\
+	_id.level++;												\
 }while(0)
 
 // adds an element to the fifo, if space is available
@@ -348,8 +337,7 @@ do{																\
 ({																\
 	typeof(&_id.data[0]) _return = & _id.data[_id.write];		\
 	_id.write = _fff_wrap(_id, (_id.write+1));					\
-	if(_id.level != _fff_mem_mask(_id))							\
-		_id.level++;											\
+	_id.level++;												\
 	_return;													\
 })
 
@@ -434,7 +422,7 @@ static inline uint8_t fff_is_empty(fff_proto_t *fifo)
 }
 static inline uint8_t fff_is_full(fff_proto_t *fifo)
 {
-	return ((fifo->write == fifo->read) && (fifo->level == fifo->mask));
+	return (fifo->level > fifo->mask);
 }
 static inline fff_index_t fff_mem_level(fff_proto_t *fifo)
 {
@@ -442,7 +430,7 @@ static inline fff_index_t fff_mem_level(fff_proto_t *fifo)
 }
 static inline fff_index_t fff_mem_free(fff_proto_t *fifo)
 {
-	return (fifo->mask - fifo->level);
+	return (fifo->mask - fifo->level + 1);
 }
 
 //
@@ -456,20 +444,13 @@ static inline void fff_reset(fff_proto_t *fifo)
 
 static inline void fff_remove(fff_proto_t *fifo, fff_index_t amount)
 {
-	if (amount > 0)
-	{
-		if (amount > fifo->level)
+	if (amount > fifo->level)
 		amount = fifo->level;
-		fff_remove_lite(fifo, amount);
-	}
+	fff_remove_lite(fifo, amount);
 }
 static inline void fff_remove_lite(fff_proto_t *fifo, fff_index_t amount)
 {
-	if (!fff_is_full(fifo))
 	fifo->level -= amount;
-	else
-	fifo->level -= (amount-1);
-
 	fifo->read = fff_wrap(fifo, fifo->read + amount);
 }
 
@@ -482,7 +463,6 @@ static inline void fff_write_lite(fff_proto_t *fifo, void *data)
 {
 	memcpy(fff_data_p(fifo, fifo->write), data, fifo->data_size);
 	fifo->write = fff_wrap(fifo, fifo->write+1);
-	if (fifo->level != fifo->mask)
 	fifo->level++;
 }
 
