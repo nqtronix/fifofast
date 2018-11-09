@@ -131,6 +131,48 @@ To keep the documentation up-to-date with the least hassle, all configuration op
 
 <br>
 
+### Pointable Fifos
+Since release 0.6.0 you can create special fifos which can be referenced by a pointer. They are created very similar to normal fifos, but they have a `_p` as a suffix:
+
+```c
+// declare pointable fifo
+_fff_declare_p(uint8_t, fifo_uint8p, 4);
+
+//init pointable fifo
+_fff_init_p(fifo_uint8p);
+```
+
+<br>
+
+To access such a fifo you have two options:
+
+1. Pass its pointer to one of the implemented functions OR
+2. Use its identifier in a macro
+
+Generic data in C can only be archived with pointers and type casts. This can be very confusing, so let me demonstrate it with examples:
+
+```c
+// 'fifo_uint8_p' has its own type depending on data type and depth, but its header looks like fff_proto_t,
+// which is the only type excepted by the functions. Therefore you need to convert the pointer first:
+uint8_t tmp_is_empty = fff_is_empty((fff_proto_t*)&fifo_uint8_p);
+
+// alternatively you can create a new temporal pointer like this:
+fff_proto_t* fifo_pointer = (fff_proto_t*)&fifo_uint8_p;
+
+// to write you need to pass a pointer to the data location. NO type check can be performed!
+uint8_t tmp_value = 42;
+fff_write(fifo_pointer, &tmp_value);
+
+// if you read data, you will only receive a void pointer. This needs to be cast into a pointer of the right
+// type and then de-referenced:
+uint8_t tmp_read = *(uint8_t*)fff_peek_read(fifo_pointer, 0);   // returns '42'
+```
+
+Type conversions are often considered to be an _evil_ feature of C, as it hides all type mismatches. To reduce the chance of bug, **only use these inline functions where absolutly required!**
+
+
+<br>
+
 ### FIFO Arrays
 For some applications you may need multiple identical fifos which can be selected with an index.
 
@@ -164,12 +206,17 @@ typedef struct
 
 typedef union __attribute__((aligned(2), packed))
 {
-	uint8_t raw[32];
-	header_t header;
+    uint8_t raw[32];
+    header_t header;
 } frame_u;
 ```
 In this case the header variable `control` is 2 bytes large and must be stored aligned
 on most architectures. The union however is treated by default as a `uint8_t` array, so no alignment is enforced. To do this manually, GCC supports the [`__attribute__((aligned(n)))`][doc-gcc-alignment]. If a struct or union is declared like this, it will be correctly stored in the fifo.
+
+To align any non-typedef'd data, you can declare a fifo like this:
+```c
+_fff_declare(uint8_t __attribute__((aligned(4))), fifo_uint8, 4);
+```
 
 <br>
 
@@ -283,8 +330,7 @@ The first version of this fifo was created about a year ago. Since then I've use
  
 ### Planned Features
 
-- **Pointable Fifos:**<br>
-  Variant of fifos that can be accessed by a pointer reference. This feature is mostly done, but still requires testing.
+- none (for now)
 
 ### Changelog
 This project uses [**Semantic Versioning 2.0.0**][semver.org]. During initial development (0.x.x versions) any _major_ increase is substituted with a _minor_ increase (0.1.0->0.2.0 instead of 0.1.0->1.0.0).
