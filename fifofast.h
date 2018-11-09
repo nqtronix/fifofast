@@ -14,9 +14,8 @@
  *
  * Some programs may need to access multiple fifos, e.g. to distribute measured ADC values to their
  * corresponding handler functions. For theses applications you can create fifos, which can be safely
- * passed by pointers (see _fff_create_p(...)). Although these fifos can be access by all
- * function-like macros, they can't be as generic and are limited to a depth of 256 and an element
- * size of 256 bytes.
+ * passed by pointers. Although these fifos can be access by all function-like macros, they can't be
+ * as generic and are limited to user selectable depth 'FIFOFAST_MAX_DEPTH_POINTABLE'.
  *
  * If any fifo is accessed from ISRs make sure all access to the involved fifo from normal code is
  * atomic! This is important to prevent glitches in the middle of an operation!
@@ -103,7 +102,7 @@ typedef struct
 	const fff_index_t mask;			// (max amount of elements in data array) - 1
 	fff_index_t read;				// index from which to read next element
 	fff_index_t write;				// index to which to write next element
-	fff_level_t level;				// possible writes without further checking
+	fff_level_t level;				// current amount of stored data. Is larger than 'mask', if full
 	uint8_t data[];					// data storage array
 } fff_proto_t;
 
@@ -148,8 +147,14 @@ typedef struct
 // _type:	any C type except pointers and structs. To store pointers or structs use typedef first
 // _depth:	maximum amount of elements, which can be stored in the fifo. Only values of 2^n are
 //			possible. If another value is passed the next larger value will be automatically
-//			selected.
-//			Additional 3/6/10 bytes are used for fifos with with <= 2^8/ <= 2^16 / <= 2^31 elements.
+//			selected. The amount of additional RAM required increases in discrete steps:
+//				    depth (elements) | RAM (bytes)
+//				---------------------+-------------
+//				     4 <= x <= 128   | 3
+//				          x == 256   | 4
+//				   512 <= x <= 32768 | 6
+//				          x == 65536 | 8
+//				131072 <= x          | 12
 
 #define _fff_declare(_type, _id, _depth)								\
 struct _FFF_NAME_STRUCT(_id) {											\
@@ -249,19 +254,12 @@ struct _FFF_NAME_STRUCT(_id) _id [] =									\
 #define _fff_is_full(_id)				(_id.level > _fff_mem_mask(_id))
 
 // returns the current fill level of the fifo (the amount of elements that can be read)
-// Note that this macro is meant to check if access through _fff_peek(...) is possible. If the fifo
-// is completely full (which should never happen normally), it will sill return (depth-1) instead!
-// Use _fff_is_full(...) to determine whether the fifo is full.
 // _id: C conform identifier
 #define _fff_mem_level(_id)				(_id.level)
 
 // returns the current free space of the fifo (the amount of elements that can be written)
-// Note that this macro is meant to check if repeated writes are possible. If the fifo
-// is almost full (depth-1, should only rarely happen normally), it will return 0.
-// Use !_fff_is_full(...) to determine whether can accept further elements.
 // _id: C conform identifier
 #define _fff_mem_free(_id)				(_fff_mem_depth(_id) - _id.level)
-
 
 // clears/ resets buffer completely
 // _id:		C conform identifier
@@ -281,7 +279,7 @@ do{																\
 }while(0)
 					
 // removes a certain number of elements. The user must ensure that the given amount of elements can
-// be removed; 0 and _fff_depth(_id) are invallid amounts! If you require argument checking use 
+// be removed; values larger than _fff_depth(_id) are invalid! If you require argument checking use 
 // _fff_remove().
 // This function is especially useful after data has been used by _fff_peek(...)
 // _id:		C conform identifier
