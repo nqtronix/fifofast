@@ -63,6 +63,9 @@ int main(void)
 {
 	// volatile prevents the compiler from optimizing the variable away
 	volatile int8_t tmp;
+    
+    // initialize fifo
+    _fff_init(fifo_int8);
 
 	// write a value to the fifo
 	_fff_write(fifo_int8, -42);
