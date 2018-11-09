@@ -339,7 +339,12 @@ This project uses [**Semantic Versioning 2.0.0**][semver.org]. During initial de
 
 The message of each commit contains detailed information about the changes made. The list below is a summary about all significant improvements.
 
- - **0.6.0 (latest)**
+ - **0.7.0 (latest)**
+   - improved usage of struct member 'level'
+     - 'level' contains now real value, even if fifo is full
+     - demo-code compiles with 25% less flash usage
+     - less if-statements required, performance therefore increased
+ - **0.6.0**
    - implemented pointable fifos, including tests
  - **0.5.0**
    - testing now automated with the brand new [unittrace][git-repo-unittrace].
