@@ -12,19 +12,27 @@
 #ifndef FIFOFAST_TEST_H_
 #define FIFOFAST_TEST_H_
 
+#include "fifofast_demo.h"
 #include "unittrace/unittrace.h"
 
 //////////////////////////////////////////////////////////////////////////
 // Function Declarations
 //////////////////////////////////////////////////////////////////////////
 
-void fifofast_test_initial(void);
-void fifofast_test_write(uint8_t startvalue);
-void fifofast_test_peek(uint8_t startvalue);
-void fifofast_test_read(uint8_t startvalue);
-void fifofast_test_add(uint8_t startvalue);
-void fifofast_test_remove_lite(uint8_t startvalue);
-void fifofast_test_remove(uint8_t startvalue);
+void fifofast_test_macro_initial(void);
+void fifofast_test_macro_write(uint8_t startvalue);
+void fifofast_test_macro_peek(uint8_t startvalue);
+void fifofast_test_macro_read(uint8_t startvalue);
+void fifofast_test_macro_add(uint8_t startvalue);
+void fifofast_test_macro_remove_lite(uint8_t startvalue);
+void fifofast_test_macro_remove(uint8_t startvalue);
 
+void fifofast_test_func_initial(fff_proto_t* fifo);
+void fifofast_test_func_write(fff_proto_t* fifo, uint8_t startvalue);
+void fifofast_test_func_peek(fff_proto_t* fifo, uint8_t startvalue);
+void fifofast_test_func_read(fff_proto_t* fifo, uint8_t startvalue);
+void fifofast_test_func_add(fff_proto_t* fifo, uint8_t startvalue);
+void fifofast_test_func_remove_lite(fff_proto_t* fifo, uint8_t startvalue);
+void fifofast_test_func_remove(fff_proto_t* fifo, uint8_t startvalue);
 
 #endif /* FIFOFAST_TEST_H_ */

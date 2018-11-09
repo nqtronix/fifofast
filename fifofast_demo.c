@@ -21,6 +21,7 @@ int main(void)
 	
 	// initialize all fifos
     __attribute__ ((unused)) _fff_init(fifo_uint8);
+	__attribute__ ((unused)) _fff_init_p(fifo_uint8p);
 	__attribute__ ((unused)) _fff_init(fifo_int16);
 	__attribute__ ((unused)) _fff_init(fifo_frame);
 	__attribute__ ((unused)) _fff_init_a(fifo_array, 5);
@@ -31,13 +32,22 @@ int main(void)
 	//
 	// The compiler MAY optimize these test strongly, and may not generate all assembler code.
 	// To debug the tests, please disable optimization.
-	fifofast_test_initial();
-	fifofast_test_write(0x10);
-	fifofast_test_peek(0x20);
-	fifofast_test_read(0x30);
-	fifofast_test_add(0x40);
-	fifofast_test_remove_lite(0x50);
-	fifofast_test_remove(0x60);
+	fifofast_test_macro_initial();
+	fifofast_test_macro_write(0x10);
+	fifofast_test_macro_peek(0x20);
+	fifofast_test_macro_read(0x30);
+	fifofast_test_macro_add(0x40);
+	fifofast_test_macro_remove_lite(0x50);
+	fifofast_test_macro_remove(0x60);
+	
+	fifofast_test_func_initial((fff_proto_t*)&fifo_uint8p);
+	fifofast_test_func_write((fff_proto_t*)&fifo_uint8p, 0x70);
+	fifofast_test_func_peek((fff_proto_t*)&fifo_uint8p, 0x80);
+	fifofast_test_func_read((fff_proto_t*)&fifo_uint8p, 0x90);
+	fifofast_test_func_add((fff_proto_t*)&fifo_uint8p, 0xa0);
+	fifofast_test_func_remove_lite((fff_proto_t*)&fifo_uint8p, 0xb0);
+	fifofast_test_func_remove((fff_proto_t*)&fifo_uint8p, 0xc0);
+	
 	UT_BREAK();
 
 

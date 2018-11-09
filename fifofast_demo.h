@@ -21,6 +21,9 @@
 // declare a fifo with 4 elements of type 'uint8_t' with the name 'fifo_uint8'
 _fff_declare(uint8_t __attribute__((aligned(4))), fifo_uint8, 4);
 
+// declare same fifo as above, but it can be passed by pointer to functions
+_fff_declare_p(uint8_t, fifo_uint8p, 4);
+
 // declare a fifo with 8 elements (6 elements is not possible, so it is automatically bumped to 8)
 // of type 'int_16' with the name 'fifo_uint16'
 _fff_declare(int16_t, fifo_int16, 6);
