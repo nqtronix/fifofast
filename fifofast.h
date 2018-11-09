@@ -27,6 +27,7 @@
 
 #include <stdint.h>		// required for data types (uint8_t, uint16_t, ...)
 #include <stddef.h>		// required for "NULL"
+#include <string.h>		// required for memcopy
 
 // include required macros
 // by default, the project's macros will be used, they have to be located at:
@@ -378,91 +379,123 @@ do{																\
 
 
 
-// functions to allow use of pinter
-// inline uint8_t fff_wrap(fff8_t *fifo, uint8_t idx)
-// {
-// 	return (idx & fifo->mask);
-// }
-// inline uint8_t fff_data_size(fff8_t *fifo)
-// {
-// 	return fifo->data_size;
-// }
-// 
-// inline uint8_t fff_is_empty(fff8_t *fifo)
-// {
-// 	return ((fifo->mask == fifo->min_w) && (fifo->min_w != 0));
-// }
-// inline uint8_t fff_is_full(fff8_t *fifo)
-// {
-// 	return ((fifo->min_w == 0) && (fifo->write == fifo->read));
-// }
-// inline uint8_t fff_mem_used(fff8_t *fifo)
-// {
-// 	return (fifo->mask - fifo->min_w);
-// }
-// inline uint8_t fff_mem_free(fff8_t *fifo)
-// {
-// 	return (fifo->min_w);
-// }
-// 
-// inline void fff_flush(fff8_t *fifo)
-// {
-// 	fifo->read	= 0;
-// 	fifo->write	= 0;
-// 	fifo->min_w	= fifo->mask;
-// }
-// 
-// inline void fff_remove(fff8_t *fifo, uint8_t amount)
-// {
-// 	if(fff_is_full(fifo))
-// 	{
-// 		fifo->min_w--;
-// 		amount--;
-// 	}
-// 	if(fifo->mask - fifo->min_w > amount)	// flush if equal
-// 	{
-// 		fifo->min_w	+= amount;
-// 		fifo->read	= fff_wrap(fifo, (fifo->read + amount));
-// 	}
-// 	else
-// 		fff_flush(fifo);
-// }
-// 
-// inline void* fff_peek_read(fff8_t *fifo, uint8_t idx)
-// {
-// 	return &(fifo->data[fff_wrap(fifo, fifo->read + idx) * fifo->data_size]);
-// }
-// 
-// // like fff_peek_read, but overwrites the stored elements
-// inline void fff_peek_write(fff8_t *fifo, uint8_t idx, void *data)
-// {
-// 	// copy an element byte for byte into the fifo
-// 	for (uint8_t i = fifo->data_size; i>0; i--)
-// 	{
-// 		fifo->data[fifo->read*fifo->data_size + i-1] = ((uint8_t*)data)[i-1];
-// 	}
-// }
-// 
-// // not tested yet
-// inline void fff_write(fff8_t *fifo, void *data)
-// {
-// 	for (uint8_t i = fifo->data_size; i>0; i--)
-// 	{
-// 		fifo->data[fifo->write*fifo->data_size + i-1] = ((uint8_t*)data)[i-1];
-// 	}
-// 	fifo->write = fff_wrap(fifo, fifo->write+1);
-// 	if(--fifo->min_w == 255)
-// 		fifo->min_w = 0;
-// }
-// 
-// 
-// inline void fff_write_safe(fff8_t *fifo, void *data)
-// {
-// 	if (fff_is_full(fifo))
-// 		return;
-// 
-// 	fff_write(fifo, data);
-// }
+// internal functions
+static inline fff_index_t fff_wrap(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
+static inline void* fff_data_p(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
+
+// these functions behave as their corresponding macros, so please refer to their description
+// for infos on usage.
+static inline fff_index_t	fff_mem_mask(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline fff_index_t	fff_mem_level(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline fff_index_t	fff_mem_free(fff_proto_t *fifo) __attribute__((__always_inline__));
+
+static inline fff_index_t	fff_data_size(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline uint8_t	fff_is_empty(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline uint8_t	fff_is_full(fff_proto_t *fifo) __attribute__((__always_inline__));
+
+static inline void		fff_reset(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline void		fff_remove(fff_proto_t *fifo, fff_index_t amount) __attribute__((__always_inline__));
+static inline void		fff_remove_lite(fff_proto_t *fifo, fff_index_t amount) __attribute__((__always_inline__));
+static inline void		fff_write(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
+static inline void		fff_write_lite(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
+
+static inline void*		fff_peek_read(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
+static inline void		fff_peek_write(fff_proto_t *fifo, fff_index_t idx, void *data) __attribute__((__always_inline__));
+
+
+//////////////////////////////////////////////////////////////////////////
+// Inline functions
+//////////////////////////////////////////////////////////////////////////
+
+// Inline functions MUST be defined in the .h, not in the .c file to work correctly!
+
+// auxiliary functions
+static inline fff_index_t fff_wrap(fff_proto_t *fifo, fff_index_t idx)
+{
+	return (idx & fifo->mask);
+}
+static inline void* fff_data_p(fff_proto_t *fifo, fff_index_t idx)
+{
+	return &(fifo->data[idx * fifo->data_size]);
+}
+static inline fff_index_t fff_mem_mask(fff_proto_t *fifo)
+{
+	return (fifo->mask);
+}
+static inline fff_index_t fff_data_size(fff_proto_t *fifo)
+{
+	return fifo->data_size;
+}
+
+//
+static inline uint8_t fff_is_empty(fff_proto_t *fifo)
+{
+	return (fifo->level == 0);
+}
+static inline uint8_t fff_is_full(fff_proto_t *fifo)
+{
+	return ((fifo->write == fifo->read) && (fifo->level == fifo->mask));
+}
+static inline fff_index_t fff_mem_level(fff_proto_t *fifo)
+{
+	return (fifo->level);
+}
+static inline fff_index_t fff_mem_free(fff_proto_t *fifo)
+{
+	return (fifo->mask - fifo->level);
+}
+
+//
+static inline void fff_reset(fff_proto_t *fifo)
+{
+	fifo->read	= 0;
+	fifo->write	= 0;
+	fifo->level = 0;
+}
+
+
+static inline void fff_remove(fff_proto_t *fifo, fff_index_t amount)
+{
+	if (amount > 0)
+	{
+		if (amount > fifo->level)
+		amount = fifo->level;
+		fff_remove_lite(fifo, amount);
+	}
+}
+static inline void fff_remove_lite(fff_proto_t *fifo, fff_index_t amount)
+{
+	if (!fff_is_full(fifo))
+	fifo->level -= amount;
+	else
+	fifo->level -= (amount-1);
+
+	fifo->read = fff_wrap(fifo, fifo->read + amount);
+}
+
+static inline void fff_write(fff_proto_t *fifo, void *data)
+{
+	if (!fff_is_full(fifo))
+	fff_write_lite(fifo,data);
+}
+static inline void fff_write_lite(fff_proto_t *fifo, void *data)
+{
+	memcpy(fff_data_p(fifo, fifo->write), data, fifo->data_size);
+	fifo->write = fff_wrap(fifo, fifo->write+1);
+	if (fifo->level != fifo->mask)
+	fifo->level++;
+}
+
+// the peek function MUST be split into two to work as a normal c function
+// BOTH function STILL refer to the top (read) end of the fifo
+static inline void* fff_peek_read(fff_proto_t *fifo, fff_index_t idx)
+{
+	return fff_data_p(fifo, fff_wrap(fifo, fifo->read+idx));
+}
+static inline void fff_peek_write(fff_proto_t *fifo, fff_index_t idx, void *data)
+{
+	memcpy(fff_data_p(fifo, fff_wrap(fifo, fifo->read+idx)), data, fifo->data_size);
+}
 
 
 #endif /* FIFOFAST_H_ */
