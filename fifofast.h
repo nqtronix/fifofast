@@ -49,10 +49,16 @@
 // User Config
 //////////////////////////////////////////////////////////////////////////
 
-// Typedef's the index data type for point-able fifos. This has to be a global setting (and not per
-// fifo) so that the inline functions can work accordingly yet fast
-//      v INSERT YOUR TYPE HERE			
-typedef uint8_t fff_index_t;
+// defines the maximum depth of pointable fifos. The performance of fifofast drops with increased
+// maximum depth in discrete steps, especially on 8bit MCUs. 32bit MCUs (such as ARM cortex) are
+// mostly unaffected, except they require slightly more RAM.
+//
+// depth			| performance
+// -----------------+-------------
+//    4 <= x <= 128	| best
+//         x == 256	| ok
+//  512 <= x		| slow
+#define FIFOFAST_MAX_DEPTH_POINTABLE	128
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -85,13 +91,19 @@ typedef uint8_t fff_index_t;
 // Data Structures (for inline functions only)
 //////////////////////////////////////////////////////////////////////////
 
+// extra #defines prevent VAssitX from marking the type red (because it doesn't understand 'typeof')
+#define FIFOFAST_INDEX_T _type_min(FIFOFAST_MAX_DEPTH_POINTABLE-1)
+#define FIFOFAST_LEVEL_T _type_min(FIFOFAST_MAX_DEPTH_POINTABLE)
+typedef FIFOFAST_INDEX_T fff_index_t;
+typedef FIFOFAST_LEVEL_T fff_level_t;
+
 typedef struct
 {
 	const fff_index_t data_size;	// bytes per element in data array
 	const fff_index_t mask;			// (max amount of elements in data array) - 1
 	fff_index_t read;				// index from which to read next element
 	fff_index_t write;				// index to which to write next element
-	fff_index_t level;				// possible writes without further checking
+	fff_level_t level;				// possible writes without further checking
 	uint8_t data[];					// data storage array
 } fff_proto_t;
 
@@ -153,7 +165,7 @@ struct _FFF_NAME_STRUCT(_id) {											\
 	const fff_index_t mask;												\
 	fff_index_t read;													\
 	fff_index_t write;													\
-	fff_index_t level;													\
+	fff_level_t level;													\
 	_type data[_FFF_GET_ARRAYDEPTH8(_depth)];							\
 } _id
 
@@ -374,7 +386,7 @@ static inline void* fff_data_p(fff_proto_t *fifo, fff_index_t idx) __attribute__
 // these functions behave as their corresponding macros, so please refer to their description
 // for infos on usage.
 static inline fff_index_t	fff_mem_mask(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline fff_index_t	fff_mem_level(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline fff_level_t	fff_mem_level(fff_proto_t *fifo) __attribute__((__always_inline__));
 static inline fff_index_t	fff_mem_free(fff_proto_t *fifo) __attribute__((__always_inline__));
 
 static inline fff_index_t	fff_data_size(fff_proto_t *fifo) __attribute__((__always_inline__));
@@ -382,8 +394,8 @@ static inline uint8_t	fff_is_empty(fff_proto_t *fifo) __attribute__((__always_in
 static inline uint8_t	fff_is_full(fff_proto_t *fifo) __attribute__((__always_inline__));
 
 static inline void		fff_reset(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline void		fff_remove(fff_proto_t *fifo, fff_index_t amount) __attribute__((__always_inline__));
-static inline void		fff_remove_lite(fff_proto_t *fifo, fff_index_t amount) __attribute__((__always_inline__));
+static inline void		fff_remove(fff_proto_t *fifo, fff_level_t amount) __attribute__((__always_inline__));
+static inline void		fff_remove_lite(fff_proto_t *fifo, fff_level_t amount) __attribute__((__always_inline__));
 static inline void		fff_write(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
 static inline void		fff_write_lite(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
 
@@ -424,7 +436,7 @@ static inline uint8_t fff_is_full(fff_proto_t *fifo)
 {
 	return (fifo->level > fifo->mask);
 }
-static inline fff_index_t fff_mem_level(fff_proto_t *fifo)
+static inline fff_level_t fff_mem_level(fff_proto_t *fifo)
 {
 	return (fifo->level);
 }
@@ -442,13 +454,13 @@ static inline void fff_reset(fff_proto_t *fifo)
 }
 
 
-static inline void fff_remove(fff_proto_t *fifo, fff_index_t amount)
+static inline void fff_remove(fff_proto_t *fifo, fff_level_t amount)
 {
 	if (amount > fifo->level)
 		amount = fifo->level;
 	fff_remove_lite(fifo, amount);
 }
-static inline void fff_remove_lite(fff_proto_t *fifo, fff_index_t amount)
+static inline void fff_remove_lite(fff_proto_t *fifo, fff_level_t amount)
 {
 	fifo->level -= amount;
 	fifo->read = fff_wrap(fifo, fifo->read + amount);
