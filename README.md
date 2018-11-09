@@ -170,7 +170,6 @@ uint8_t tmp_read = *(uint8_t*)fff_peek_read(fifo_pointer, 0);   // returns '42'
 
 Type conversions are often considered to be an _evil_ feature of C, as it hides all type mismatches. To reduce the chance of bug, **only use these inline functions where absolutly required!**
 
-
 <br>
 
 ### FIFO Arrays
@@ -337,7 +336,9 @@ This project uses [**Semantic Versioning 2.0.0**][semver.org]. During initial de
 
 The message of each commit contains detailed information about the changes made. The list below is a summary about all significant improvements.
 
- - **0.5.0 (latest)**
+ - **0.6.0 (latest)**
+   - implemented pointable fifos, including tests
+ - **0.5.0**
    - testing now automated with the brand new [unittrace][git-repo-unittrace].
    - _finally_ polished up this readme :tada:
  - **0.4.0**
