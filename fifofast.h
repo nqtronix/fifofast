@@ -50,7 +50,8 @@
 
 // defines the maximum depth of pointable fifos. The performance of fifofast drops with increased
 // maximum depth in discrete steps, especially on 8bit MCUs. 32bit MCUs (such as ARM cortex) are
-// mostly unaffected, except they require slightly more RAM.
+// mostly unaffected, except they require slightly more RAM. If the value is NOT a 2^n value, it
+// will automatically be rounded up.
 //
 // depth			| performance
 // -----------------+-------------
@@ -87,12 +88,32 @@
 
 
 //////////////////////////////////////////////////////////////////////////
+// internal macros (_FFF_*)
+//////////////////////////////////////////////////////////////////////////
+
+// rounds up given argument to next 2^n value. Used to deal with invalid user input.
+#define  ROUND_UP_2N(_arg)				((uint64_t)1<<(_log2(_arg-1)+1))
+
+// returns the structure name matching to given ID without the keyword 'struct'
+#define _FFF_NAME_STRUCT(_id)			CAT(fff_, _id, _s)
+
+// returns matching type for internal index values; fifo contrains are automatically applied
+#define _FFF_GET_TYPE(_depth)			_type_min(_limit_lo(_depth,4)-1)
+#define _FFF_SIZEOF_DATA(_id)			sizeof(((struct _FFF_NAME_STRUCT(_id)*)0)->data[0])
+#define _FFF_SIZEOF_ARRAY(_id)			_sizeof_array(((struct _FFF_NAME_STRUCT(_id)*)0)->data)
+
+// returns the length of the data array; fifo contrains are automatically applied
+#define	_FFF_GET_ARRAYDEPTH(_depth)		_limit(ROUND_UP_2N(_depth), 4, ((uint32_t)1<<31))
+#define	_FFF_GET_ARRAYDEPTH_P(_depth)	_limit(ROUND_UP_2N(_depth), 4, ROUND_UP_2N(FIFOFAST_MAX_DEPTH_POINTABLE))
+
+
+//////////////////////////////////////////////////////////////////////////
 // Data Structures (for inline functions only)
 //////////////////////////////////////////////////////////////////////////
 
 // extra #defines prevent VAssitX from marking the type red (because it doesn't understand 'typeof')
-#define FIFOFAST_INDEX_T _type_min(FIFOFAST_MAX_DEPTH_POINTABLE-1)
-#define FIFOFAST_LEVEL_T _type_min(FIFOFAST_MAX_DEPTH_POINTABLE)
+#define FIFOFAST_INDEX_T _type_min(ROUND_UP_2N(FIFOFAST_MAX_DEPTH_POINTABLE)-1)
+#define FIFOFAST_LEVEL_T _type_min(ROUND_UP_2N(FIFOFAST_MAX_DEPTH_POINTABLE))
 typedef FIFOFAST_INDEX_T fff_index_t;
 typedef FIFOFAST_LEVEL_T fff_level_t;
 
@@ -105,23 +126,6 @@ typedef struct
 	fff_level_t level;				// current amount of stored data. Is larger than 'mask', if full
 	uint8_t data[];					// data storage array
 } fff_proto_t;
-
-
-//////////////////////////////////////////////////////////////////////////
-// internal macros (_FFF_*)
-//////////////////////////////////////////////////////////////////////////
-
-// returns the structure name matching to given ID without the keyword 'struct'
-#define _FFF_NAME_STRUCT(_id)			CAT(fff_, _id, _s)
-
-// returns matching type for internal index values; fifo contrains are automatically applied
-#define _FFF_GET_TYPE(_depth)			_type_min(_limit_lo(_depth,4)-1)
-#define _FFF_SIZEOF_DATA(_id)			sizeof(((struct _FFF_NAME_STRUCT(_id)*)0)->data[0])
-#define _FFF_SIZEOF_ARRAY(_id)			_sizeof_array(((struct _FFF_NAME_STRUCT(_id)*)0)->data)
-
-// returns the length of the data array; fifo contrains are automatically applied
-#define	_FFF_GET_ARRAYDEPTH8(_depth)	_limit((1<<(1+_log2((uint8_t)_depth-1))), 4, UINT8_MAX+1)
-#define	_FFF_GET_ARRAYDEPTH16(_depth)	_limit((1<<(1+_log2((uint16_t)_depth-1))), 4, (uint16_t)INT16_MAX+1)
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -161,7 +165,7 @@ struct _FFF_NAME_STRUCT(_id) {											\
 	_FFF_GET_TYPE(_depth) read;											\
 	_FFF_GET_TYPE(_depth) write;										\
 	_FFF_GET_TYPE(_depth+1) level;										\
-	_type data[_FFF_GET_ARRAYDEPTH16(_depth)];							\
+	_type data[_FFF_GET_ARRAYDEPTH(_depth)];							\
 } _id
 
 #define _fff_declare_p(_type, _id, _depth)								\
@@ -171,14 +175,12 @@ struct _FFF_NAME_STRUCT(_id) {											\
 	fff_index_t read;													\
 	fff_index_t write;													\
 	fff_level_t level;													\
-	_type data[_FFF_GET_ARRAYDEPTH8(_depth)];							\
+	_type data[_FFF_GET_ARRAYDEPTH_P(_depth)];							\
 } _id
 
 // declares an array with '_size' fifos. '_size' can be any positive integer.
 #define _fff_declare_a(_type, _id, _depth, _size)		_fff_declare(_type, _id, _depth) [_size]
 #define _fff_declare_pa(_type, _id, _depth, _size)		_fff_declare_p(_type, , _depth) [_size]
-
-// TODO: make '_FFF_GET_ARRAYDEPTH8(_depth)' dependent on fff_index_t
 
 
 // initializes the fifo with the name '<_id>'
