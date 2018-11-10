@@ -134,6 +134,14 @@ To keep the documentation up-to-date with the least hassle, all configuration op
 
 <br>
 
+### Configuration
+
+fifofast is designed to work out-of-the-box the majority of all use cases. To increase flexibility, but retain the performance for simple applications, you can set configuration options\* in `fifofast.h` in the section _User Config_. 
+
+<sub>*As of 0.7.0 there is only one configuration option, but this is the place where other options would go.</sub>
+
+<br>
+
 ### Pointable Fifos
 Since release 0.6.0 you can create special fifos which can be referenced by a pointer. They are created very similar to normal fifos, but they have a `_p` as a suffix:
 
