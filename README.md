@@ -4,12 +4,12 @@
 <h3 align="center" style="font-weight: bold; margin-top: 20px; margin-bottom: 20px;">A fast, generic fifo for MCUs.</h4>
 
 <p align="center">
-	<a href="#changelog"><img src="https://img.shields.io/github/release-pre/nqtronix/fifofast.svg" alt="release: NA"></a>
-    <a href="#about"><img src="https://img.shields.io/badge/language-C_(GCC_5.4.0)-blue.svg" alt="language: C GCC (5.4.0)"></a>
-    <a href="#about"><img src="https://img.shields.io/badge/platform-MCUs, AVR8-blue.svg" alt="platform: MCUs, AVR8"></a>
-	<a href="#about"><img src="https://img.shields.io/badge/status-active-brightgreen.svg" alt="status: active"></a>
-	<a href="https://github.com/nqtronix/fifofast/issues"><img src="https://img.shields.io/github/issues/nqtronix/fifofast.svg" alt="issues: NA"></a>
-	<a href="#license"><img src="https://img.shields.io/github/license/nqtronix/fifofast.svg" alt="license: NA"></a>
+<a href="#changelog"><img src="https://img.shields.io/github/release-pre/nqtronix/fifofast.svg" alt="release: NA"></a>
+<a href="#about"><img src="https://img.shields.io/badge/language-C_(GCC_5.4.0)-blue.svg" alt="language: C GCC (5.4.0)"></a>
+<a href="#about"><img src="https://img.shields.io/badge/platform-MCUs, AVR8-blue.svg" alt="platform: MCUs, AVR8"></a>
+<a href="#about"><img src="https://img.shields.io/badge/status-active-brightgreen.svg" alt="status: active"></a>
+<a href="https://github.com/nqtronix/fifofast/issues"><img src="https://img.shields.io/github/issues/nqtronix/fifofast.svg" alt="issues: NA"></a>
+<a href="#license"><img src="https://img.shields.io/github/license/nqtronix/fifofast.svg" alt="license: NA"></a>
 </p>
 
 <p align="center">
@@ -61,20 +61,20 @@ _fff_declare(int8_t, fifo_int8, 16);
 
 int main(void)
 {
-	// volatile prevents the compiler from optimizing the variable away
-	volatile int8_t tmp;
+    // volatile prevents the compiler from optimizing the variable away
+    volatile int8_t tmp;
     
     // initialize fifo
     _fff_init(fifo_int8);
 
-	// write a value to the fifo
-	_fff_write(fifo_int8, -42);
+    // write a value to the fifo
+    _fff_write(fifo_int8, -42);
 
-	// read back the value from the fifo
-	tmp = _fff_read(fifo_int8);
+    // read back the value from the fifo
+    tmp = _fff_read(fifo_int8);
 
-	// 'tmp' contains now the value '-42'
-	while(1);
+    // 'tmp' contains now the value '-42'
+    while(1);
 }
 ```
 
@@ -229,33 +229,36 @@ To use **fifofast** you don't need to know its inner workings. This chapter is f
 ### The Typical Implementation
 To get the best performance most fifos are based on an array for data storage. New elements are always placed at the next free index. When the fifo is read, the element of the earliest written index is returned. Example:
 
-	empty array:
-	┌───┬───┬───┬───┬───┬───┬───┬───┐
-	│   │   │   │   │   │   │   │   │
-	└───┴───┴───┴───┴───┴───┴───┴───┘
+```
+empty array:
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│   │   │   │   │   │   │   │   │
+└───┴───┴───┴───┴───┴───┴───┴───┘
 
-	write 4 elements:
-	┌───┬───┬───┬───┬───┬───┬───┬───┐
-	│ a │ b │ c │ d │   │   │   │   │
-	└───┴───┴───┴───┴───┴───┴───┴───┘
+write 4 elements:
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│ a │ b │ c │ d │   │   │   │   │
+└───┴───┴───┴───┴───┴───┴───┴───┘
 
-	read 2 elements:
-	┌───┬───┬───┬───┬───┬───┬───┬───┐
-	│   │   │ c │ d │   │   │   │   │
-	└───┴───┴───┴───┴───┴───┴───┴───┘
-
+read 2 elements:
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│   │   │ c │ d │   │   │   │   │
+└───┴───┴───┴───┴───┴───┴───┴───┘
+```
 
 After the array was filled at least once, new data must be added to the very first location. This is called a [circular buffer (wiki)][wiki-circular-buffer]
 
-	after some time (example):
-	┌───┬───┬───┬───┬───┬───┬───┬───┐
-	│   │   │   │   │   │ e │ f │ g │
-	└───┴───┴───┴───┴───┴───┴───┴───┘
+```
+after some time (example):
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│   │   │   │   │   │ e │ f │ g │
+└───┴───┴───┴───┴───┴───┴───┴───┘
 
     write 1 element:
-	┌───┬───┬───┬───┬───┬───┬───┬───┐
-	│ h │   │   │   │   │ e │ f │ g │
-	└───┴───┴───┴───┴───┴───┴───┴───┘
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│ h │   │   │   │   │ e │ f │ g │
+└───┴───┴───┴───┴───┴───┴───┴───┘
+```
 
 To detect this overflow the straight forward approach is to use `if(index > array_size){index = 0;}`. This comparison has to be done for _every_ fifo access. Branches take typically more cycles than arithmetic instruction, especially if a [instruction pipeline (wiki)][wiki-pipelining] is used within the MCU.
 
