@@ -43,7 +43,7 @@ First-In-First-Out (FIFO) buffers are one of the most used data structures, espe
 
 ## Limititations
 - **Fifo size:**<br>
-  The fifo size is limited to 2ⁿ elements to make use of the fast wrapping functionality. Other sizes will be automatically rounded up. Pointable fifos are limited to 256 elements with a size of up to 256 bytes each.
+  The fifo size is limited to 2ⁿ elements to make use of the fast wrapping functionality. Other sizes will be automatically rounded up. Pointable fifos have the same limitation and in additon their element size is limited to 255 bytes.
    
 - **Programm memory usage:**<br>
   Each function-like macro or inline function pastes new code at its location. Compared to a regular function-based fifo the program memory usage (flash) is higher.
