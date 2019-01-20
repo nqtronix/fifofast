@@ -39,14 +39,13 @@ int main(void)
 	fifofast_test_macro_add(0x40);
 	fifofast_test_macro_remove_lite(0x50);
 	fifofast_test_macro_remove(0x60);
+	fifofast_test_macro_rebase(0x70);
 	
 	fifofast_test_func_initial((fff_proto_t*)&fifo_uint8p);
-	fifofast_test_func_write((fff_proto_t*)&fifo_uint8p, 0x70);
-	fifofast_test_func_peek((fff_proto_t*)&fifo_uint8p, 0x80);
-	fifofast_test_func_read((fff_proto_t*)&fifo_uint8p, 0x90);
-	fifofast_test_func_add((fff_proto_t*)&fifo_uint8p, 0xa0);
-	fifofast_test_func_remove_lite((fff_proto_t*)&fifo_uint8p, 0xb0);
-	fifofast_test_func_remove((fff_proto_t*)&fifo_uint8p, 0xc0);
+	fifofast_test_func_write((fff_proto_t*)&fifo_uint8p, 0x80);
+	fifofast_test_func_peek((fff_proto_t*)&fifo_uint8p, 0x90);
+	fifofast_test_func_remove_lite((fff_proto_t*)&fifo_uint8p, 0xa0);
+	fifofast_test_func_remove((fff_proto_t*)&fifo_uint8p, 0xb0);
 	
 	UT_BREAK();
 

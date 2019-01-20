@@ -26,12 +26,11 @@ void fifofast_test_macro_read(uint8_t startvalue);
 void fifofast_test_macro_add(uint8_t startvalue);
 void fifofast_test_macro_remove_lite(uint8_t startvalue);
 void fifofast_test_macro_remove(uint8_t startvalue);
+void fifofast_test_macro_rebase(uint8_t startvalue);
 
 void fifofast_test_func_initial(fff_proto_t* fifo);
 void fifofast_test_func_write(fff_proto_t* fifo, uint8_t startvalue);
 void fifofast_test_func_peek(fff_proto_t* fifo, uint8_t startvalue);
-void fifofast_test_func_read(fff_proto_t* fifo, uint8_t startvalue);
-void fifofast_test_func_add(fff_proto_t* fifo, uint8_t startvalue);
 void fifofast_test_func_remove_lite(fff_proto_t* fifo, uint8_t startvalue);
 void fifofast_test_func_remove(fff_proto_t* fifo, uint8_t startvalue);
 
