@@ -74,6 +74,7 @@
 
 // For all development versions (0.x.x) the patch version is increased whenever a function was renamed
 
+
 //////////////////////////////////////////////////////////////////////////
 // Check requirements
 //////////////////////////////////////////////////////////////////////////
@@ -126,6 +127,38 @@ typedef struct
 	fff_level_t level;				// current amount of stored data. Is larger than 'mask', if full
 	uint8_t data[];					// data storage array
 } fff_proto_t;
+
+
+//////////////////////////////////////////////////////////////////////////
+// Function Declarations (User)
+//////////////////////////////////////////////////////////////////////////
+
+// these functions behave as their corresponding macros, so please refer to their description
+// for infos on usage.
+static inline fff_index_t	fff_mem_mask(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline fff_level_t	fff_mem_level(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline fff_index_t	fff_mem_free(fff_proto_t *fifo) __attribute__((__always_inline__));
+
+static inline fff_index_t	fff_data_size(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline uint8_t	fff_is_empty(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline uint8_t	fff_is_full(fff_proto_t *fifo) __attribute__((__always_inline__));
+
+static inline void		fff_reset(fff_proto_t *fifo) __attribute__((__always_inline__));
+static inline void		fff_remove(fff_proto_t *fifo, fff_level_t amount) __attribute__((__always_inline__));
+static inline void		fff_remove_lite(fff_proto_t *fifo, fff_level_t amount) __attribute__((__always_inline__));
+static inline void		fff_write(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
+static inline void		fff_write_lite(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
+
+static inline void*		fff_peek_read(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
+static inline void		fff_peek_write(fff_proto_t *fifo, fff_index_t idx, void *data) __attribute__((__always_inline__));
+
+
+//////////////////////////////////////////////////////////////////////////
+// Function Declarations (Internal)
+//////////////////////////////////////////////////////////////////////////
+
+static inline fff_index_t fff_wrap(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
+static inline void* fff_data_p(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
 
 
 //////////////////////////////////////////////////////////////////////////
@@ -378,30 +411,52 @@ do{																\
 #define _fff_peek(_id, idx)				_id.data[_fff_wrap(_id, _id.read+(idx))]
 
 
-
-// internal functions
-static inline fff_index_t fff_wrap(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
-static inline void* fff_data_p(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
-
-// these functions behave as their corresponding macros, so please refer to their description
-// for infos on usage.
-static inline fff_index_t	fff_mem_mask(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline fff_level_t	fff_mem_level(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline fff_index_t	fff_mem_free(fff_proto_t *fifo) __attribute__((__always_inline__));
-
-static inline fff_index_t	fff_data_size(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline uint8_t	fff_is_empty(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline uint8_t	fff_is_full(fff_proto_t *fifo) __attribute__((__always_inline__));
-
-static inline void		fff_reset(fff_proto_t *fifo) __attribute__((__always_inline__));
-static inline void		fff_remove(fff_proto_t *fifo, fff_level_t amount) __attribute__((__always_inline__));
-static inline void		fff_remove_lite(fff_proto_t *fifo, fff_level_t amount) __attribute__((__always_inline__));
-static inline void		fff_write(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
-static inline void		fff_write_lite(fff_proto_t *fifo, void *data) __attribute__((__always_inline__));
-
-static inline void*		fff_peek_read(fff_proto_t *fifo, fff_index_t idx) __attribute__((__always_inline__));
-static inline void		fff_peek_write(fff_proto_t *fifo, fff_index_t idx, void *data) __attribute__((__always_inline__));
-
+// re-writes the internal array, so that the element _fff_peek(0) will be at the physical idx 0
+// Although this does not effect any of the fifo functions, it does simplify operations on string
+// stored in the fifo.
+// NOTE that this macro copies element-by-element and might take very long for large fifos with many
+// elements or large data sizes.
+//
+// Macro inspired by Jon Bentley's array rotation algorithm and this stackoverflow answer:
+// https://stackoverflow.com/a/22079960/6215916
+//
+// This version has only one call of _FFF_REVERSE to safe program memory
+#define _fff_rebase(_id)										\
+do{																\
+	typeof(_id.mask) idx1, idx2;								\
+																\
+	/* reversing 1st half, 2nd half and everything together	*/	\
+	/* rotates the array									*/	\
+	for (uint8_t rep = 0; rep<3; rep++)							\
+	{															\
+		switch (rep)											\
+		{														\
+			case 0:												\
+				idx1 = 0;										\
+				idx2 = _id.read-1;								\
+				break;											\
+			case 1:												\
+				idx1 = _id.read;								\
+				idx2 = _id.mask;								\
+				break;											\
+			case 2:												\
+				idx1 = 0;										\
+				idx2 = _id.mask;								\
+				break;											\
+			default:											\
+				break;											\
+		}														\
+																\
+		/* reverse section from idx1 to idx2 */					\
+		for (; idx1 < idx2; idx1++, idx2--)						\
+		{														\
+			typeof(&_id.data[0]) tmp;							\
+			tmp				= _id.data[idx1];					\
+			_id.data[idx1]	= _id.data[idx2];					\
+			_id.data[idx2]	= tmp;								\
+		}														\
+	}															\
+}while(0)
 
 //////////////////////////////////////////////////////////////////////////
 // Inline functions
