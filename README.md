@@ -1,4 +1,4 @@
-
+		
 <h1 align="center" style="font-weight: bold; margin-top: 20px; margin-bottom: 20px;">fifofast</h4>
 
 <h3 align="center" style="font-weight: bold; margin-top: 20px; margin-bottom: 20px;">A fast, generic fifo for MCUs.</h4>
@@ -129,13 +129,63 @@ This section is written especially for everyone who is **not familiar** with the
 ## Documentation
 
 ### API
-
 To keep the documentation up-to-date with the least hassle, all configuration options, functions and their arguments are explained in a comment right in front of the declaration. See `fifofast.h` for more information. This section will be updated as soon as this project hits version 1.0.0.
+
+Below you find information about the unusual functions/ macros in this implementation.
+
+#### `_fff_peak()`
+The macro `_fff_peak()` allows the user to access any element of the fifo _as if_ it was an array. The first element of the fifo can be accessed with `_fff_peak(fifo, 0)`,  the following elements with an incremented index. See the illustration below:
+
+```
+array within fifo:
+      ┌───┬───┬───┬───┬───┬───┬───┬───┐
+      │   │   │   │ d │ a │ t │ a │   │
+      └───┴───┴───┴───┴───┴───┴───┴───┘
+_fff_peek(fifo, 0)  ^   ^   ^   ^
+_fff_peek(fifo, 1) ─────┘   │   │
+_fff_peek(fifo, 2) ─────────┘   │
+_fff_peek(fifo, 3) ─────────────┘
+```
+
+`_fff_peak()` is different from the typical `_fff_read()` and `_fff_write()` in multiple ways:
+
+1. The macro can be used as a right side **or** left side argument to read from/ write to a specific location.
+2. The data pointers are **not** changed. Reading or writing data will not remove/ add elements to/ from the fifo.
+3. The current fifo level is **not** checked, allowing the user to access "empty space", too.
+
+Thus `_fff_peak()` is especially useful for any algorithem that needs to modify present data.
+
+#### `_fff_rebase()`
+If you receive strings through a serial interface you may want to use a fifo to store them temporally. Once completly received, you may want to use any of the build-in string functions on the stored data. This is not allways directly possible. Consider the following case:
+
+A fifo has received multiple chars, which might be stored in the internal array as shown below:
+```
+array within fifo:
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│ n │ g │   │   │ s │ t │ r │ i │
+└───┴───┴───┴───┴───┴───┴───┴───┘
+```
+
+However, the string functions expect a continuous data array without the "wrap" in the middle. To solve this, call `_fff_rebase()`. This will re-arrange the array, so that the first element is stored in the first position of the array.
+
+```
+array within fifo, after _fff_rebase():
+┌───┬───┬───┬───┬───┬───┬───┬───┐
+│ s │ t │ r │ i │ n │ g │   │   │
+└───┴───┴───┴───┴───┴───┴───┴───┘
+```
+
+To get a pointer to the first character, you can use `_fff_peek()`:
+
+```c
+char* first_char = &_fff_peek(fifo, 0);
+```
+
+**Note:** `_fff_rebase()` iterates across all elements in the array and the execution time increases linearly with depth and element size of the fifo. Use only when necessary.
 
 <br>
 
 ### Configuration
-
 fifofast is designed to work out-of-the-box the majority of all use cases. To increase flexibility, but retain the performance for simple applications, you can set configuration options\* in `fifofast.h` in the section _User Config_. 
 
 <sub>*As of 0.7.0 there is only one configuration option, but this is the place where other options would go.</sub>
@@ -262,7 +312,7 @@ after some time (example):
 │   │   │   │   │   │ e │ f │ g │
 └───┴───┴───┴───┴───┴───┴───┴───┘
 
-    write 1 element:
+write 1 element:
 ┌───┬───┬───┬───┬───┬───┬───┬───┐
 │ h │   │   │   │   │ e │ f │ g │
 └───┴───┴───┴───┴───┴───┴───┴───┘
