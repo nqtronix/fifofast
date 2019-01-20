@@ -166,7 +166,7 @@ array within fifo:
 └───┴───┴───┴───┴───┴───┴───┴───┘
 ```
 
-However, the string functions expect a continuous data array without the "wrap" in the middle. To solve this, call `_fff_rebase()`. This will re-arrange the array, so that the first element is stored in the first position of the array.
+However, the string functions expect a continuous data array without the "wrap" in the middle. To solve this, 0.8.0 adds the macro `_fff_rebase()`. It re-arranges the array, so that the first element is stored in the first position of the array.
 
 ```
 array within fifo, after _fff_rebase():
@@ -400,7 +400,9 @@ This project uses [**Semantic Versioning 2.0.0**][semver.org]. During initial de
 
 The message of each commit contains detailed information about the changes made. The list below is a summary about all significant improvements.
 
- - **0.7.0 (latest)**
+ - **0.8.0  (latest)**
+	 - implemented `_fff_rebase()` to handle strings better
+ - **0.7.0**
    - improved usage of struct member 'level'
      - 'level' contains now real value, even if fifo is full
      - demo-code compiles with 25% less flash usage
