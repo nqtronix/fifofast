@@ -423,7 +423,11 @@ do{																\
 // This version has only one call of _FFF_REVERSE to safe program memory
 #define _fff_rebase(_id)										\
 do{																\
-	typeof(_id.mask) idx1, idx2;								\
+	/* check if rebase required */								\
+	if (_id.read == 0)											\
+		break;													\
+																\
+	typeof(_id.read) idx1, idx2;								\
 																\
 	/* reversing 1st half, 2nd half and everything together	*/	\
 	/* rotates the array									*/	\
@@ -431,31 +435,34 @@ do{																\
 	{															\
 		switch (rep)											\
 		{														\
+			default:											\
 			case 0:												\
 				idx1 = 0;										\
 				idx2 = _id.read-1;								\
 				break;											\
 			case 1:												\
 				idx1 = _id.read;								\
-				idx2 = _id.mask;								\
+				idx2 = _fff_mem_mask(_id);						\
 				break;											\
 			case 2:												\
 				idx1 = 0;										\
-				idx2 = _id.mask;								\
-				break;											\
-			default:											\
+				idx2 = _fff_mem_mask(_id);						\
 				break;											\
 		}														\
 																\
 		/* reverse section from idx1 to idx2 */					\
 		for (; idx1 < idx2; idx1++, idx2--)						\
 		{														\
-			typeof(&_id.data[0]) tmp;							\
+			typeof(_id.data[0]) tmp;							\
 			tmp				= _id.data[idx1];					\
 			_id.data[idx1]	= _id.data[idx2];					\
 			_id.data[idx2]	= tmp;								\
 		}														\
 	}															\
+																\
+	/* Update data indices */									\
+	_id.write	= _id.write - _id.read;							\
+	_id.read	= 0;											\
 }while(0)
 
 //////////////////////////////////////////////////////////////////////////
