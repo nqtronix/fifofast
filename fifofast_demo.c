@@ -40,6 +40,7 @@ int main(void)
 	fifofast_test_macro_remove_lite(0x50);
 	fifofast_test_macro_remove(0x60);
 	fifofast_test_macro_rebase(0x70);
+	fifofast_test_macro_multiple_write(0x80);
 	
 	fifofast_test_func_initial((fff_proto_t*)&fifo_uint8p);
 	fifofast_test_func_write((fff_proto_t*)&fifo_uint8p, 0x80);

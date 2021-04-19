@@ -374,6 +374,32 @@ void fifofast_test_macro_rebase(uint8_t startvalue)
 	_fff_reset(fifo_uint8);
 }
 
+void fifofast_test_macro_multiple_write(uint8_t startvalue) {
+	uint8_t multidata[3] = {startvalue + 3, startvalue + 4, startvalue + 5};
+
+	_fff_write_lite(fifo_uint8, startvalue+0);
+	_fff_write_lite(fifo_uint8, startvalue+1);
+	_fff_write_lite(fifo_uint8, startvalue+2);
+
+	_fff_remove_lite(fifo_uint8, 2);
+
+	_fff_write_multiple(fifo_uint8, multidata, 3);
+
+
+	UT_ASSERT(_fff_peek(fifo_uint8, 0)		== startvalue+2);
+	UT_ASSERT(_fff_peek(fifo_uint8, 1)		== startvalue+3);
+	UT_ASSERT(_fff_peek(fifo_uint8, 2)		== startvalue+4);
+	UT_ASSERT(_fff_peek(fifo_uint8, 3)		== startvalue+5);
+
+
+	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 4);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_is_full(fifo_uint8)		== 1);
+	
+
+	_fff_reset(fifo_uint8);
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Test Functions
