@@ -343,11 +343,9 @@ do{																\
 // _id: C conform identifier
 #define _fff_read(_id)											\
 ({																\
-	typeof(_id.data[0])	_return;								\
+	typeof(_id.data[0])	_return = (typeof(_id.data[0])){0};		\
 	if(!_fff_is_empty(_id))										\
 		_return = _fff_read_lite(_id);							\
-	else														\
-		_return = *((typeof(_id.data[0])*)NULL);				\
 	_return;													\
 })	
 
@@ -390,11 +388,9 @@ do{																\
 // _id: C conform identifier
 #define _fff_add(_id)											\
 ({																\
-	typeof(&_id.data[0]) _return;								\
+	typeof(&_id.data[0]) _return = (typeof(&_id.data[0]))NULL;	\
 	if(!_fff_is_full(_id))										\
 		_return = _fff_add_lite(_id);							\
-	else														\
-		_return = (typeof(&_id.data[0]))NULL;					\
 	_return;													\
 })
 
