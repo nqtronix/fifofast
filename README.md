@@ -56,17 +56,18 @@ The declaration of a fifo is slightly different to support generic types, but th
 ```c
 #include "fifofast.h"
 
-// declare a fifo with 16 elements of type 'int_8' with the name 'fifo_int8'
+// declare a fifo with 16 elements of type 'int_8' with the name 'fifo_int8';
+// for access in other .c files, move the declaration into a .h file and include it in each .c file
 _fff_declare(int8_t, fifo_int8, 16);
+
+// initialize the fifo; use this macro only in one .c file (even if accessed from different files)
+_fff_init(fifo_int8);
 
 int main(void)
 {
     // volatile prevents the compiler from optimizing the variable away
     volatile int8_t tmp;
     
-    // initialize fifo
-    _fff_init(fifo_int8);
-
     // write a value to the fifo
     _fff_write(fifo_int8, -42);
 

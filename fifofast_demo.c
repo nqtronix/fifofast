@@ -19,14 +19,6 @@ int main(void)
 	// Test Environment
 	//////////////////////////////////////////////////////////////////////////
 	
-	// initialize all fifos
-    __attribute__ ((unused)) _fff_init(fifo_uint8);
-	__attribute__ ((unused)) _fff_init_p(fifo_uint8p);
-	__attribute__ ((unused)) _fff_init(fifo_int16);
-	__attribute__ ((unused)) _fff_init(fifo_frame);
-	__attribute__ ((unused)) _fff_init_a(fifo_array, 5);
-	UT_BREAK();
-
 	// Note: only fifo_uint8 is tested here as uint8 are most easy to work with
 	// after each change (or set of changes) call all returning functions
 	//
