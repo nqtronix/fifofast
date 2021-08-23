@@ -394,7 +394,7 @@ do{																\
     if (btw > 0) {                                              \
         memcpy(&_id.data[_id.write], (newdata)+tocopy, btw);    \
         _id.write = btw;                                        \
-        _id.level += tocopy;                                    \
+        _id.level += btw;                                    \
     }                                                           \
 }while(0)
 
