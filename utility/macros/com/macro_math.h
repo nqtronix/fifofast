@@ -42,6 +42,10 @@
 #define _shift_right(arg, shiftAmount)		\
 	(shiftAmount > 0 ? arg >> shiftAmount : arg << (-shiftAmount))
 
+// returns the minimum of both parameters, if x == y, y is returned
+#define _min(x, y)                           \
+    (((x) > (y)) ? (y) : (x))
+
 // returns the mathematical function log2(x), rounded down to nearest integer
 // this marco-like function makes use of a GCC build-in function and can be used eg. for if(log2(x)>y)
 // If a literal is passed to this function, the result is calculated at compile time and stored in flash.

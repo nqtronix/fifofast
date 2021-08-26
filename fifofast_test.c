@@ -385,6 +385,47 @@ void fifofast_test_macro_rebase(uint8_t startvalue)
 	_fff_reset(fifo_uint8);
 }
 
+void fifofast_test_macro_write_multiple(uint8_t startvalue) {
+	uint8_t multidata[4] = {startvalue + 3, startvalue + 4, startvalue + 5, startvalue + 6};
+
+	// initialize fifo with some data
+	_fff_write_lite(fifo_uint8, startvalue+0);
+	_fff_write_lite(fifo_uint8, startvalue+1);
+	_fff_write_lite(fifo_uint8, startvalue+2);
+	_fff_remove_lite(fifo_uint8, 2);
+
+	// write test data, case: all data fits
+	_fff_write_multiple(fifo_uint8, multidata, 3);
+
+	UT_ASSERT(_fff_peek(fifo_uint8, 0)		== startvalue+2);
+	UT_ASSERT(_fff_peek(fifo_uint8, 1)		== startvalue+3);
+	UT_ASSERT(_fff_peek(fifo_uint8, 2)		== startvalue+4);
+	UT_ASSERT(_fff_peek(fifo_uint8, 3)		== startvalue+5);
+
+	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 4);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_is_full(fifo_uint8)		== 1);
+	
+	_fff_reset(fifo_uint8);
+	
+	// re-initialize fifo with some data
+	_fff_write_lite(fifo_uint8, startvalue+7);
+	_fff_write_multiple(fifo_uint8, multidata, 3);
+	
+	// write test data, case: NOT all data fits (overflow is discarded)
+	_fff_write_multiple(fifo_uint8, multidata, 4);
+	
+	UT_ASSERT(_fff_peek(fifo_uint8, 0)		== startvalue+7);
+	UT_ASSERT(_fff_peek(fifo_uint8, 1)		== startvalue+3);
+	UT_ASSERT(_fff_peek(fifo_uint8, 2)		== startvalue+4);
+	UT_ASSERT(_fff_peek(fifo_uint8, 3)		== startvalue+5);
+
+	UT_ASSERT(_fff_mem_level(fifo_uint8)	== 4);
+	UT_ASSERT(_fff_mem_free(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_is_empty(fifo_uint8)		== 0);
+	UT_ASSERT(_fff_is_full(fifo_uint8)		== 1);
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Test Functions

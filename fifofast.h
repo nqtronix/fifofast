@@ -371,6 +371,29 @@ do{																\
 		_fff_write_lite(_id, newdata);							\
 }while(0)
 
+// copies an array of elements to the fifo as long as space is available
+// if full all excess elements will be dismissed
+// _id:		C conform identifier
+// newdata:	array of data to be written
+// n:       amount of data do be written
+#define _fff_write_multiple(_id, newdata, n)					\
+do{																\
+    typeof(_id.level) tocopy, btw;								\
+    btw = _min(_fff_mem_free(_id), (n));						\
+    if (btw == 0) {												\
+        break;													\
+    }															\
+    tocopy = _min(btw, _fff_mem_depth(_id) - _id.write);		\
+    memcpy(&_id.data[_id.write], (newdata), tocopy);			\
+    _id.level += tocopy;										\
+    _id.write = _fff_wrap(_id, (_id.write+tocopy));				\
+    btw -= tocopy;												\
+    if (btw > 0) {												\
+        memcpy(&_id.data[_id.write], (newdata)+tocopy, btw);	\
+        _id.write = btw;										\
+        _id.level += btw;										\
+    }															\
+}while(0)
 
 // adds an element to the fifo, but does not write any data to it. instead, a pointer to the data
 // section is returned. The caller may write up to _fff_data_size(_id) bytes to this location.
