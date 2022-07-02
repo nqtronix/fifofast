@@ -98,12 +98,12 @@
 // returns the structure name matching to given ID without the keyword 'struct'
 #define _FFF_NAME_STRUCT(_id)			CAT(fff_, _id, _s)
 
-// returns matching type for internal index values; fifo contrains are automatically applied
+// returns matching type for internal index values; fifo constrains are automatically applied
 #define _FFF_GET_TYPE(_depth)			_type_min(_limit_lo(_depth,4)-1)
 #define _FFF_SIZEOF_DATA(_id)			sizeof(((struct _FFF_NAME_STRUCT(_id)*)0)->data[0])
 #define _FFF_SIZEOF_ARRAY(_id)			_sizeof_array(((struct _FFF_NAME_STRUCT(_id)*)0)->data)
 
-// returns the length of the data array; fifo contrains are automatically applied
+// returns the length of the data array; fifo constrains are automatically applied
 #define	_FFF_GET_ARRAYDEPTH(_depth)		_limit(ROUND_UP_2N(_depth), 4, ((uint32_t)1<<31))
 #define	_FFF_GET_ARRAYDEPTH_P(_depth)	_limit(ROUND_UP_2N(_depth), 4, ROUND_UP_2N(FIFOFAST_MAX_DEPTH_POINTABLE))
 
