@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2018-2021 nqtronix (github.com/nqtronix)
+Copyright (c) 2018-2022 nqtronix (github.com/nqtronix)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

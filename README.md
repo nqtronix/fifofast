@@ -24,9 +24,9 @@
 
 
 ## Introduction
-First-In-First-Out (FIFO) buffers are one of the most used data structures, especially on micro controllers (MCUs) to handle read time data input/output. Although there are countless of implementations, there wasn't a single one that is well optimized for MCUs.
+First-In-First-Out (FIFO) buffers are one of the most used data structures, especially on micro controllers (MCUs) to handle data input/output in real time. Although there are countless of implementations, there wasn't a single one that is well optimized for entry level MCUs.
 
-**fifofast** was specifically designed to consume as little CPU time and SRAM as possible, while providing more versatility and features than typical implementations. It is ideally suited to buffer serial data, ADC measurement results or other data of any kind.
+**fifofast** was specifically designed to consume as little CPU time and SRAM as possible, while providing more versatility and features than typical implementations. It is ideally suited to buffer serial data, ADC measurement results or arbitrary data shared between differnt time critical functions.
 
 <br>
 
@@ -43,7 +43,10 @@ First-In-First-Out (FIFO) buffers are one of the most used data structures, espe
 
 ## Limititations
 - **Fifo size:**<br>
-  The fifo size is limited to 2ⁿ elements to make use of the fast wrapping functionality. Other sizes will be automatically rounded up. Pointable fifos have the same limitation and in additon their element size is limited to 255 bytes.
+  The fifo size is limited to 2ⁿ elements to make use of the fast wrapping functionality. Other sizes will be automatically rounded up.
+  
+- **Element size:**<br>
+  Normal fifos can store elements of any size. An exception are point-able fifos, which have a maximum element size of 255 bytes.
    
 - **Programm memory usage:**<br>
   Each function-like macro or inline function pastes new code at its location. Compared to a regular function-based fifo the program memory usage (flash) is higher.
@@ -134,11 +137,12 @@ To keep the documentation up-to-date with the least hassle, all configuration op
 
 Below you find information about the unusual functions/ macros in this implementation.
 
-#### `_fff_peak()`
-The macro `_fff_peak()` allows the user to access any element of the fifo _as if_ it was an array. The first element of the fifo can be accessed with `_fff_peak(fifo, 0)`,  the following elements with an incremented index. See the illustration below:
+#### `_fff_peek()`
+The macro `_fff_peek()` allows the user to access any element of the fifo _as if_ it was an array. The first element of the fifo can be accessed with `_fff_peek(fifo, 0)`,  the following elements with an incremented index. See the illustration below:
 
 ```
 array within fifo:
+first element       v
       ┌───┬───┬───┬───┬───┬───┬───┬───┐
       │   │   │   │ d │ a │ t │ a │   │
       └───┴───┴───┴───┴───┴───┴───┴───┘
@@ -148,16 +152,16 @@ _fff_peek(fifo, 2) ─────────┘   │
 _fff_peek(fifo, 3) ─────────────┘
 ```
 
-`_fff_peak()` is different from the typical `_fff_read()` and `_fff_write()` in multiple ways:
+`_fff_peek()` is different from the typical `_fff_read()` and `_fff_write()` in multiple ways:
 
 1. The macro can be used as a right side **or** left side argument to read from/ write to a specific location.
 2. The data pointers are **not** changed. Reading or writing data will not remove/ add elements to/ from the fifo.
 3. The current fifo level is **not** checked, allowing the user to access "empty space", too.
 
-Thus `_fff_peak()` is especially useful for any algorithem that needs to modify present data.
+Thus `_fff_peek()` is especially useful for any algorithm that needs to modify present data with minimum overhead. This macro is only marginally slower than a regular array access and significantly faster than copying data to a temporary buffer
 
 #### `_fff_rebase()`
-If you receive strings through a serial interface you may want to use a fifo to store them temporally. Once completly received, you may want to use any of the build-in string functions on the stored data. This is not allways directly possible. Consider the following case:
+If you receive strings through a serial interface you may want to use a fifo to store them temporally. Once completely received, you may want to use any of the build-in string functions on the stored data. This is not always directly possible. Consider the following case:
 
 A fifo has received multiple chars, which might be stored in the internal array as shown below:
 ```
@@ -350,7 +354,7 @@ As you can see, the logic operation works exactly as we want! Of course you don'
 <br>
 
 ### Generic Data
-Support for generic data types is not a part of C so **fifofast** has to use a creative work-around with macros. The key are the `_fff_declate(...)` macros:
+Support for generic data types is not a part of C so **fifofast** has to use a creative work-around with macros. The key are the `_fff_declare(...)` macros:
 
 ```c
 #define _fff_declare(_type, _id, _depth)            \
@@ -363,7 +367,7 @@ struct _FFF_NAME_STRUCT(_id)                        \
 } _id
 ```
 
-Each macro "call" declares a new struct with an individual type and identifier. Therefore each of these struct can have members of a different size. However all structs have identical member identifiers, so if the `_id` known, a member can be accessed with `_id.member` like a normal struct. The compiler knows all datatypes used within the structure and generates appropiate code.
+Each macro "call" declares a new struct with an individual type and identifier. Therefore each of these struct can have members of a different size. However all structs have identical member identifiers, so if the `_id` known, a member can be accessed with `_id.member` like a normal struct. The compiler keeps track of all datatypes used within the structure and generates appropriate code.
 
 <br>
 
